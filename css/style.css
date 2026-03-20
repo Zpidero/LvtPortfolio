@@ -52,12 +52,13 @@ section + section { border-top: 1px solid var(--border); }
 .section-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 3rem; }
 
 /* ---- Hero ---- */
-#hero { padding-top: 8rem; padding-bottom: 7rem; }
-.hero-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.5rem; }
-.hero-name { font-size: clamp(2.6rem, 6vw, 4.2rem); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
-.hero-tagline { font-size: 1.05rem; color: var(--muted); max-width: 480px; margin-bottom: 2.5rem; font-weight: 300; line-height: 1.8; }
-.hero-cta { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: border-color 0.2s, gap 0.2s; }
-.hero-cta:hover { border-color: var(--text); gap: 12px; }
+#hero { padding-top: 8rem; padding-bottom: 7rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.75rem; }
+.hero-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.hero-name { font-size: clamp(2.6rem, 6vw, 4.2rem); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; margin: 0; }
+.hero-email { font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 0.03em; transition: color 0.2s; }
+.hero-email:hover { color: var(--text); }
+.hero-social { display: flex; gap: 10px; justify-content: center; }
+.hero-cv { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* ---- About ---- */
 .about-text { font-size: 1rem; line-height: 1.85; font-weight: 300; max-width: 600px; }
@@ -91,25 +92,59 @@ section + section { border-top: 1px solid var(--border); }
 .skill-group { padding: 1.4rem 1.5rem; background: var(--bg); }
 .skill-group-name { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
 .skill-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.skill-list li { font-size: 14px; font-weight: 300; }
+.skill-list li { font-size: 14px; font-weight: 300; display: flex; align-items: center; gap: 9px; }
+.skill-list li svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--muted); }
+.skill-icon-wrap { width: 15px; height: 15px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+.skill-icon-wrap svg { width: 15px; height: 15px; fill: var(--muted); }
 
-/* ---- Contact ---- */
-.contact-intro { font-size: 1rem; color: var(--muted); font-weight: 300; max-width: 440px; line-height: 1.85; margin-bottom: 2.5rem; }
-.contact-links { display: flex; flex-direction: column; gap: 1.25rem; }
-.contact-link { display: flex; align-items: center; gap: 1rem; font-size: 14px; transition: opacity 0.2s; }
-.contact-link:hover { opacity: 0.5; }
-.contact-link-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); min-width: 64px; }
+.social-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em;
+  padding: 8px 16px; border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text); background: transparent;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.social-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
+.social-btn:hover svg { color: var(--bg); }
+.hero-cv { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---- Contact section (bottom) ---- */
+.contact-section { text-align: center; }
+.contact-section .section-label { text-align: center; }
+.contact-heading { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 300; letter-spacing: -0.02em; margin-bottom: 1rem; }
+.contact-intro { font-size: 1rem; color: var(--muted); font-weight: 300; max-width: 380px; line-height: 1.85; margin: 0 auto 2rem; }
+
+/* ---- CV buttons ---- */
+.cv-btn {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em;
+  padding: 10px 22px; border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text); background: transparent;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.cv-btn:hover { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 /* ---- Footer ---- */
 footer { max-width: 760px; margin: 0 auto; padding: 2rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 footer p { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
 
+/* ---- Scroll reveal ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* ---- Animations ---- */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-.hero-label   { animation: fadeUp 0.6s ease both 0.05s; }
-.hero-name    { animation: fadeUp 0.6s ease both 0.15s; }
-.hero-tagline { animation: fadeUp 0.6s ease both 0.25s; }
-.hero-cta     { animation: fadeUp 0.6s ease both 0.35s; }
+.hero-label  { animation: fadeUp 0.6s ease both 0.05s; }
+.hero-name   { animation: fadeUp 0.6s ease both 0.15s; }
+.hero-email  { animation: fadeUp 0.6s ease both 0.25s; }
+.hero-social { animation: fadeUp 0.6s ease both 0.35s; }
+.hero-cv     { animation: fadeUp 0.6s ease both 0.45s; }
 
 /* ---- Mobile ---- */
 @media (max-width: 600px) {
