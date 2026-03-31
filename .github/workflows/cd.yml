@@ -12,15 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Trigger Render deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: srv-d6ump8p4tr6s7390hn4g
+          RENDER_SERVICE_ID: your-render-service-id
         run: |
           curl -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
             -H "Accept: application/json" \
-            https://api.render.com/deploy/srv-${RENDER_SERVICE_ID}
+            "https://api.render.com/deploy/srv-${RENDER_SERVICE_ID}?force=true"
