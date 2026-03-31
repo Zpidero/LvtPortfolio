@@ -17,7 +17,7 @@ jobs:
       - name: Trigger Render deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_SERVICE_ID: your-render-service-id
+          RENDER_SERVICE_ID: srv-d6ump8p4tr6s7390hn4g
         run: |
           curl -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
