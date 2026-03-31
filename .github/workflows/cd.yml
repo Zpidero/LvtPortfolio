@@ -16,7 +16,10 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: srv-d6ump8p4tr6s7390hn4g
         run: |
-          curl -X POST \
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $RENDER_API_KEY" \
-            -H "Accept: application/json" \
-            "https://api.render.com/deploy/${RENDER_SERVICE_ID}?force=true"
+            -H "Content-Type: application/json" \
+            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -d '{"clearCache": false}')
+          echo "Render API response: $response"
+          [ "$response" = "201" ] || exit 1
