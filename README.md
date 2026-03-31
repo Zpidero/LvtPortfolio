@@ -21,16 +21,16 @@ Live at: `https://lvtportfolio.onrender.com/`
 
 ```
 portfolio/
-├── index.html              # Main HTML
+├── index.html
 ├── css/
-│   └── style.css           # All styles, dark mode, animations, responsive
+│   └── style.css       
 ├── js/
-│   └── main.js             # Scroll reveal, project filter tabs, active nav
+│   └── main.js            
 ├── assets/
 │   ├── cv/
-│   │   ├── cv-lluc-vivet-en.pdf    ← English CV (add yours here)
-│   │   └── cv-lluc-vivet-ca.pdf    ← Catalan CV (add yours here)
-│   └── images/                     ← Any images you want to add
+│   │   ├── cv-lluc-vivet-en.pdf
+│   │   └── cv-lluc-vivet-ca.pdf    
+│   └── images/                     
 └── README.md
 ```
 
@@ -59,6 +59,18 @@ Then open [http://localhost:3000](http://localhost:3000).
 - [DM Sans](https://fonts.google.com/specimen/DM+Sans) + [DM Mono](https://fonts.google.com/specimen/DM+Mono) — Google Fonts
 - [Simple Icons](https://simpleicons.org/) — skill icons
 - Deployed on [Render](https://render.com)
+
+---
+
+## CI/CD Pipeline
+
+This project uses two GitHub Actions workflows for automated validation and deployment.
+
+### CI — Continuous Integration (`ci.yml`)
+Triggered on every `push` or `pull request` to `main`. It spins up the static site with `serve` and runs a `curl` health check to confirm the site responds correctly.
+
+### CD — Continuous Deployment (`cd.yml`)
+Triggered automatically after the CI workflow passes. It uses a **Render Deploy Hook** — a private URL stored as a GitHub secret — to trigger a new deploy on [lvtportfolio.onrender.com](https://lvtportfolio.onrender.com). Deploys only happen on `main` and only if CI succeeds.
 
 ---
 
