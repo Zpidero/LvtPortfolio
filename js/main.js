@@ -500,6 +500,7 @@
     const k = max > 0 ? deepScroll.scrollTop / max : 0;
     depthEl.style.setProperty('--p', (k * 100).toFixed(1) + '%');
     depthVal.textContent = Math.round(4 + k * 36) + 'm';
+    if (lake3d) lake3d.setScroll('projects', k);
     layerDeep.style.setProperty('--deep-dark', (k * 0.45).toFixed(3));
   }
 
@@ -558,6 +559,7 @@
 
   function interact(x0, y0, x1, y1) {
     const speed = Math.hypot(x1 - x0, y1 - y0);
+    if (lake3d) { lake3d.pointer(x1, y1, speed); return; }
     if (state.busy) return;
     if (state.page === 'home') {
       if (y1 > L.horizon + 2) {
@@ -586,6 +588,8 @@
   addEventListener('pointerdown', e => {
     const x = e.clientX, y = e.clientY;
     ptr.x = x; ptr.y = y; ptr.has = true;
+    spawnInkSplat(x, y);
+    if (lake3d) { if (!e.target.closest('a, button, input, textarea')) lake3d.click(x, y); return; }
     if (state.busy) return;
     if (state.page === 'home') lakeDrop(x, y, 5, 520);
     else if (state.page === 'projects') {
@@ -594,33 +598,110 @@
     }
   }, { passive: true });
 
-  addEventListener('pointerleave', () => { ptr.has = false; ptr.x = ptr.y = -9999; });
+  document.documentElement.addEventListener('pointerleave', () => {
+    ptr.has = false; ptr.x = ptr.y = -9999;
+    if (lake3d) lake3d.leave();
+  });
 
-  /* ---------- Custom cursor ---------- */
-  const cursorDot = $('#cursorDot'), cursorRing = $('#cursorRing');
-  const ring = { x: 0, y: 0 };
+  /* ---------- Ink-brush cursor ----------
+     A sumi-ink brush tip that leaves a fading stroke, draws an ensō
+     circle over links and splatters ink on click. */
+  const inkCanvas = $('#inkCanvas');
+  const ictx = inkCanvas.getContext('2d');
+  const enso = $('#enso');
+  const inkTrail = [], inkDrops = [];
+  const tip = { x: -99, y: -99, a: 0 };
+  const INK_LIFE = 460;
+  let hoverDOM = false, hover3D = false;
+  function syncEnso() {
+    const on = hoverDOM || hover3D;
+    enso.classList.toggle('on', on);
+    body.classList.toggle('cursor-link', on);
+    body.classList.toggle('pick-3d', hover3D && !hoverDOM);
+  }
+
+  function layoutInk() {
+    if (!finePointer) return;
+    inkCanvas.width = W * DPR; inkCanvas.height = H * DPR;
+    ictx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
   if (finePointer) {
+    addEventListener('pointermove', e => {
+      inkTrail.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+      if (inkTrail.length > 60) inkTrail.shift();
+    }, { passive: true });
     document.addEventListener('pointerover', e => {
-      cursorRing.classList.toggle('hover', !!e.target.closest('a, button'));
+      hoverDOM = !!e.target.closest('a, button');
+      syncEnso();
     });
   }
-  function updateCursor() {
+  function spawnInkSplat(x, y) {
     if (!finePointer) return;
-    ring.x += (ptr.x - ring.x) * 0.16;
-    ring.y += (ptr.y - ring.y) * 0.16;
-    cursorDot.style.transform = `translate3d(${ptr.x}px, ${ptr.y}px, 0)`;
-    cursorRing.style.transform = `translate3d(${ring.x}px, ${ring.y}px, 0)`;
+    for (let i = 0; i < 12; i++) {
+      const a = rand(0, Math.PI * 2), sp = rand(60, 320);
+      inkDrops.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: rand(1, 3.6), life: rand(0.35, 0.7), age: 0 });
+    }
+  }
+  function updateCursor(dt) {
+    if (!finePointer) return;
+    const now = performance.now();
+    const dark = state.page === 'contact';
+    const ink = dark ? '33,27,22' : '255,246,234';
+    ictx.clearRect(0, 0, W, H);
+
+    while (inkTrail.length && now - inkTrail[0].t > INK_LIFE) inkTrail.shift();
+
+    // the brush stroke: thick and dark near the tip, thin and faded at the tail
+    ictx.lineCap = 'round'; ictx.lineJoin = 'round';
+    for (let i = 1; i < inkTrail.length; i++) {
+      const a = inkTrail[i - 1], b = inkTrail[i];
+      const k = 1 - (now - b.t) / INK_LIFE;
+      if (k <= 0) continue;
+      ictx.strokeStyle = `rgba(${ink},${(k * 0.8).toFixed(3)})`;
+      ictx.lineWidth = 0.6 + k * k * 7;
+      ictx.beginPath(); ictx.moveTo(a.x, a.y); ictx.lineTo(b.x, b.y); ictx.stroke();
+    }
+
+    // ink splatter
+    for (let i = inkDrops.length - 1; i >= 0; i--) {
+      const d = inkDrops[i];
+      d.age += dt;
+      if (d.age >= d.life) { inkDrops.splice(i, 1); continue; }
+      d.vx *= 1 - dt * 6; d.vy *= 1 - dt * 6;
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      ictx.fillStyle = `rgba(${ink},${(1 - d.age / d.life).toFixed(3)})`;
+      ictx.beginPath(); ictx.arc(d.x, d.y, d.r, 0, 6.283); ictx.fill();
+    }
+
+    // brush tip: an ink drop stretched along the direction of travel
+    const dx = ptr.x - tip.x, dy = ptr.y - tip.y;
+    tip.x += dx * 0.5; tip.y += dy * 0.5;
+    const sp = Math.hypot(dx, dy);
+    if (sp > 0.5) tip.a = Math.atan2(dy, dx);
+    if (ptr.has) {
+      const stretch = 1 + Math.min(sp / 18, 1.4);
+      ictx.save();
+      ictx.translate(ptr.x, ptr.y); ictx.rotate(tip.a);
+      ictx.fillStyle = `rgba(${ink},.95)`;
+      ictx.beginPath(); ictx.ellipse(0, 0, 4.5 * stretch, 4.5 / Math.sqrt(stretch), 0, 0, 6.283); ictx.fill();
+      ictx.restore();
+      ictx.fillStyle = '#e0573f';
+      ictx.beginPath(); ictx.arc(ptr.x, ptr.y, 1.8, 0, 6.283); ictx.fill();
+    }
+    enso.style.transform = `translate3d(${ptr.x}px, ${ptr.y}px, 0)`;
+    enso.classList.toggle('dark', dark);
   }
 
   /* =========================================================
      Router + scene transitions
      ========================================================= */
-  const PAGES  = ['home', 'projects', 'about', 'contact'];
+  const PAGES  = ['home', 'projects', 'about', 'contact', 'gallery'];
   const TITLES = {
     home: 'Lluc Vivet Torras — Developer',
     projects: 'Projects — Lluc Vivet Torras',
     about: 'About — Lluc Vivet Torras',
-    contact: 'Contact — Lluc Vivet Torras'
+    contact: 'Contact — Lluc Vivet Torras',
+    gallery: '侍の目 — Hidden gallery'
   };
   const MOVE = reduceMotion ? 450 : 1500;
 
@@ -629,7 +710,7 @@
   const interior   = $('#page-contact');
   const aboutScroll = $('#aboutScroll');
   const layers = {
-    home: $('#page-home'), projects: layerDeep, about: $('#page-about'), contact: interior
+    home: $('#page-home'), projects: layerDeep, about: $('#page-about'), contact: interior, gallery: $('#page-gallery')
   };
   const state  = { page: null, busy: false, queued: null };
   const active = new Set();
@@ -647,6 +728,7 @@
     }
     document.title = TITLES[p];
     if (p === 'projects') revealCards();
+    if (p === 'gallery') loadGallery();
   }
 
   function setZoomOrigin() {
@@ -676,7 +758,7 @@
 
     if (from === 'home' && to === 'projects') {            // dive under the surface
       active.add('projects');
-      lakeSplash();
+      if (lake3d) lake3d.dive(d); else lakeSplash();
       bubbleBurst();
       deepScroll.scrollTop = 0; updateDepth();
       world.dataset.at = 'projects';
@@ -684,24 +766,26 @@
       active.delete('home');
     } else if (from === 'projects' && to === 'home') {     // surface again
       active.add('home');
+      if (lake3d) lake3d.surface(d);
       world.dataset.at = 'home';
       await sleep(d * 0.6);
-      lake.drop(lake.w / 2, lake.h * 0.8, 6, 700);
+      if (!lake3d) lake.drop(lake.w / 2, lake.h * 0.8, 6, 700);
       await sleep(d * 0.4);
       active.delete('projects');
     } else if (from === 'home' && to === 'about') {        // rise into the sky
-      petalUpdraft(d / 1000);
+      if (lake3d) lake3d.rise(d); else petalUpdraft(d / 1000);
       aboutScroll.scrollTop = 0;
       world.dataset.at = 'about';
       await sleep(d);
       active.delete('home');
     } else if (from === 'about' && to === 'home') {        // descend back to the lake
       active.add('home');
+      if (lake3d) lake3d.descend(d);
       world.dataset.at = 'home';
       await sleep(d);
     } else if (from === 'home' && to === 'contact') {      // walk into the house
-      setZoomOrigin();
-      zoom.classList.add('zoomed');
+      if (lake3d) lake3d.enterHouse(d);
+      else { setZoomOrigin(); zoom.classList.add('zoomed'); }
       await sleep(d * 0.78);
       interior.classList.add('show');
       layoutWin();
@@ -710,10 +794,15 @@
       interior.classList.add('open');
       await sleep(fast ? 500 : 950);
       active.delete('home');
+    } else if (to === 'gallery' || from === 'gallery') {   // (2D fallback) the iris opens / closes
+      active.add(to === 'gallery' ? from : to);
+      if (from === 'gallery') world.dataset.at = to === 'contact' ? 'home' : to;
+      await sleep(d * 0.8);
     } else if (from === 'contact' && to === 'home') {      // step back outside
       interior.classList.remove('open');
       await sleep(fast ? 450 : 850);
       active.add('home');
+      if (lake3d) lake3d.exitHouse(d);
       zoom.classList.remove('zoomed');
       interior.classList.remove('show');
       await sleep(d * 0.9);
@@ -722,14 +811,81 @@
     state.page = to;
   }
 
+  async function travel3D(from, to) {
+    const ms = lake3d.travelTime(from, to);
+    root.style.setProperty('--move', ms + 'ms');
+    body.classList.add('in-transit');
+    if (from === 'contact') interior.classList.remove('show', 'open');
+    if (from === 'gallery') closeLightbox();
+    if (to === 'projects') { deepScroll.scrollTop = 0; updateDepth(); }
+    if (to === 'about') { aboutScroll.scrollTop = 0; lake3d.setScroll('about', 0); }
+    if (to === 'gallery') { loadGallery(); $('#galleryScroll').scrollTop = 0; }
+    markPage(to);
+    const done = lake3d.travel(from, to, ms);
+    await sleep(ms * (to === 'gallery' ? 0.97 : 0.7));   // the iris only opens once we're inside the pupil
+    body.classList.remove('in-transit');
+    if (to === 'contact') interior.classList.add('show', 'open');
+    await done;
+    state.page = to;
+  }
+
+  /* ---------- Hidden gallery ---------- */
+  const photoGrid = $('#photoGrid');
+  const lightbox = $('#lightbox'), lbImg = $('#lbImg'), lbCap = $('#lbCap');
+  let photos = [], lbIndex = 0, galleryLoaded = null;
+  function loadGallery() {
+    if (galleryLoaded) return galleryLoaded;
+    galleryLoaded = fetch('assets/gallery/photos.json', { cache: 'no-cache' })
+      .then(r => r.json())
+      .then(data => {
+        photos = (data.photos || []).map(p => ({ src: /^(https?:)?\/\//.test(p.src) ? p.src : 'assets/gallery/' + p.src, caption: p.caption || '' }));
+        photoGrid.innerHTML = '';
+        if (!photos.length) { photoGrid.innerHTML = '<p class="gallery-empty">No photos yet — add some to assets/gallery/photos.json</p>'; return; }
+        photos.forEach((p, i) => {
+          const fig = document.createElement('figure');
+          fig.className = 'photo'; fig.tabIndex = 0; fig.style.setProperty('--i', i);
+          fig.setAttribute('role', 'button'); fig.setAttribute('aria-label', p.caption || `Photo ${i + 1}`);
+          const img = document.createElement('img');
+          img.src = p.src; img.alt = p.caption; img.loading = 'lazy'; img.decoding = 'async';
+          fig.appendChild(img);
+          if (p.caption) { const cap = document.createElement('figcaption'); cap.textContent = p.caption; fig.appendChild(cap); }
+          fig.addEventListener('click', () => openLightbox(i));
+          fig.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(i); } });
+          photoGrid.appendChild(fig);
+        });
+      })
+      .catch(() => { photoGrid.innerHTML = '<p class="gallery-empty">Couldn\'t load the gallery.</p>'; galleryLoaded = null; });
+    return galleryLoaded;
+  }
+  function showPhoto(i) {
+    lbIndex = (i + photos.length) % photos.length;
+    lbImg.src = photos[lbIndex].src; lbImg.alt = photos[lbIndex].caption;
+    lbCap.textContent = photos[lbIndex].caption;
+  }
+  function openLightbox(i) { showPhoto(i); lightbox.hidden = false; $('#lbClose').focus(); }
+  function closeLightbox() { lightbox.hidden = true; }
+  $('#lbClose').addEventListener('click', closeLightbox);
+  $('#lbPrev').addEventListener('click', () => showPhoto(lbIndex - 1));
+  $('#lbNext').addEventListener('click', () => showPhoto(lbIndex + 1));
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  addEventListener('keydown', e => {
+    if (lightbox.hidden) return;
+    if (e.key === 'Escape') { closeLightbox(); e.stopImmediatePropagation(); }
+    else if (e.key === 'ArrowLeft') { showPhoto(lbIndex - 1); e.stopImmediatePropagation(); }
+    else if (e.key === 'ArrowRight') { showPhoto(lbIndex + 1); e.stopImmediatePropagation(); }
+  }, true);
+
   async function go(target) {
     if (!PAGES.includes(target)) target = 'home';
     if (state.busy) { state.queued = target; return; }
     if (target === state.page) return;
     state.busy = true;
     try {
-      if (state.page !== 'home' && target !== 'home') await leg(state.page, 'home', true);
-      await leg(state.page, target, false);
+      if (lake3d) await travel3D(state.page, target);
+      else {
+        if (state.page !== 'home' && target !== 'home') await leg(state.page, 'home', true);
+        await leg(state.page, target, false);
+      }
     } finally {
       state.busy = false;
     }
@@ -752,7 +908,13 @@
   const atBottom = el => el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
   const innerScrolledAt = { projects: 0, about: 0 };
   deepScroll.addEventListener('scroll', () => { innerScrolledAt.projects = performance.now(); updateDepth(); }, { passive: true });
-  aboutScroll.addEventListener('scroll', () => { innerScrolledAt.about = performance.now(); }, { passive: true });
+  aboutScroll.addEventListener('scroll', () => {
+    innerScrolledAt.about = performance.now();
+    if (lake3d) {
+      const max = aboutScroll.scrollHeight - aboutScroll.clientHeight;
+      lake3d.setScroll('about', max > 0 ? aboutScroll.scrollTop / max : 0);
+    }
+  }, { passive: true });
 
   let wheelAcc = 0, wheelTimer = 0, lastNavAt = 0;
   addEventListener('wheel', e => {
@@ -793,7 +955,7 @@
   addEventListener('keydown', e => {
     if (e.target.closest && e.target.closest('input, textarea')) return;
     const p = state.page;
-    if (e.key === 'Escape' && p !== 'home') navigate('home');
+    if (e.key === 'Escape' && p !== 'home') { closeLightbox(); navigate('home'); }
     else if (p === 'home' && (e.key === 'ArrowDown' || e.key === 'PageDown')) navigate('projects');
     else if (p === 'home' && (e.key === 'ArrowUp' || e.key === 'PageUp')) navigate('about');
   });
@@ -821,23 +983,25 @@
     last = now;
     const t = now / 1000;
 
-    if (active.has('home')) {
+    if (lake3d) {
+      lake3d.render(dt, t);
+    } else if (active.has('home')) {
       if (!reduceMotion && Math.random() < dt * 0.6) {
         lake.drop(rand(2, lake.w - 2), rand(lake.h * 0.1, lake.h - 2), 1.5, 70);
       }
       lake.step(t);
       updatePetals(dt, t);
     }
-    if (active.has('projects')) {
+    if (!lake3d && active.has('projects')) {
       if (!reduceMotion && Math.random() < dt * 5) deep.drop(rand(2, deep.w - 2), rand(2, deep.h * 0.12), 2, 40);
       deep.step(t);
       updateFx(dt, t);
     }
-    if (active.has('contact')) {
+    if (!lake3d && active.has('contact')) {
       if (!reduceMotion && Math.random() < dt * 0.5) win.drop(rand(2, win.w - 2), rand(2, win.h - 2), 1.5, 60);
       win.step(t);
     }
-    updateCursor();
+    updateCursor(dt);
     requestAnimationFrame(frame);
   }
 
@@ -853,6 +1017,8 @@
     layoutDeep();
     layoutFx();
     setZoomOrigin();
+    layoutInk();
+    if (lake3d) lake3d.resize(W, H);
     if (state.page === 'contact') layoutWin();
     return p;
   }
@@ -863,6 +1029,23 @@
     resizeTimer = setTimeout(layoutAll, 160);
   });
 
+  let lake3d = null;
+  async function load3D() {
+    try {
+      const mod = await import('./scene3d.js');
+      lake3d = mod.createLake3D({
+        container: $('#stage'), reduceMotion, initialPage: state.page || pageFromHash(),
+        onNavigate: p => navigate(p),
+        onHover: on => { hover3D = on; syncEnso(); }
+      });
+      body.classList.add('three-on');
+      if (state.page === 'projects') updateDepth();
+    } catch (e) {
+      console.warn('3D lake unavailable, using the 2D one:', e);
+      lake3d = null;
+    }
+  }
+
   function init() {
     makeStars();
     const texReady = layoutAll();
@@ -870,7 +1053,8 @@
     updateDepth();
     requestAnimationFrame(frame);
     const reveal = () => body.classList.add('loaded');
-    Promise.race([texReady, sleep(2000)]).then(() => setTimeout(reveal, 250), reveal);
+    const ready3D = load3D();
+    Promise.race([Promise.all([texReady, ready3D]), sleep(4000)]).then(() => setTimeout(reveal, 250), reveal);
   }
 
   init();

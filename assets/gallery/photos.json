@@ -1,0 +1,36 @@
+{
+  "photos": [
+    {
+      "src": "placeholder-01.svg",
+      "caption": "Dusk — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-02.svg",
+      "caption": "Tide — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-03.svg",
+      "caption": "Sakura — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-04.svg",
+      "caption": "Night — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-05.svg",
+      "caption": "Lantern — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-06.svg",
+      "caption": "Forest — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-07.svg",
+      "caption": "Temple — placeholder, replace with your photo"
+    },
+    {
+      "src": "placeholder-08.svg",
+      "caption": "Peak — placeholder, replace with your photo"
+    }
+  ]
+}

@@ -16,9 +16,9 @@
   <!-- Intro veil -->
   <div id="veil" aria-hidden="true"><span>湖</span></div>
 
-  <!-- Cursor -->
-  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
-  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+  <!-- Ink-brush cursor -->
+  <canvas id="inkCanvas" aria-hidden="true"></canvas>
+  <svg id="enso" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="100" d="M70 16 C 92 26, 96 58, 80 76 C 62 96, 26 92, 14 70 C 2 48, 14 20, 40 13 C 50 10, 58 11, 64 13"/></svg>
 
   <!-- Navigation -->
   <nav id="nav" aria-label="Main">
@@ -30,6 +30,9 @@
       <li><a href="#contact" data-route="contact"><span class="jp">連絡</span>Contact</a></li>
     </ul>
   </nav>
+
+  <!-- 3D stage (Three.js renders the whole world here) -->
+  <div id="stage" aria-hidden="true"></div>
 
   <!-- The world: sky (about) / lake surface (home) / underwater (projects), stacked vertically -->
   <div id="world" data-at="home">
@@ -248,7 +251,7 @@
           </a></li>
         </ul>
 
-        <p class="hint" aria-hidden="true">Touch the water<br>scroll ↓ dive · ↑ rise</p>
+        <p class="hint" aria-hidden="true">Move across the water · click to float a lantern<br>Click the house to enter · the torii to rise<br>scroll ↓ dive · ↑ rise</p>
       </div>
     </section>
 
@@ -324,6 +327,22 @@
             <div class="card-tags"><span>Python</span><span>HackUPC 2025</span></div>
             <span class="card-kanji" aria-hidden="true">陸</span>
           </a>
+
+          <a class="card" data-category="hackathon" href="https://github.com/NatalyJaya/JetFlow" target="_blank" rel="noopener" hidden>
+            <div class="card-top"><span class="card-num">07</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">JetFlow</h3>
+            <p class="card-desc">An IntelliJ plugin that brings CI/CD into the IDE: generates GitHub Actions workflows, deploys and rolls back Render services, and bundles project context for LLMs. Built at HackUPC 2026.</p>
+            <div class="card-tags"><span>Kotlin</span><span>IntelliJ Plugin</span><span>CI/CD</span><span>HackUPC 2026</span></div>
+            <span class="card-kanji" aria-hidden="true">漆</span>
+          </a>
+
+          <a class="card" data-category="hackathon" href="https://github.com/lauraharoescoi/GameJam_2024" target="_blank" rel="noopener" hidden>
+            <div class="card-top"><span class="card-num">08</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">GameJam 2024</h3>
+            <p class="card-desc">A 360º resource management, tower defense and space invaders game, developed in 48 hours at the Lleida LAN Party Game Jam.</p>
+            <div class="card-tags"><span>Unity</span><span>C#</span><span>Tower Defense</span><span>Game Jam 2024</span></div>
+            <span class="card-kanji" aria-hidden="true">捌</span>
+          </a>
         </div>
 
         <p class="layer-foot">— the lake bed — <br>scroll up at the top to surface ↑</p>
@@ -378,6 +397,33 @@
     <div class="shoji r" aria-hidden="true"></div>
   </section>
 
+  <!-- ============ HIDDEN GALLERY — through the samurai's eye ============ -->
+  <section class="gallery" id="page-gallery" aria-label="Photo gallery">
+    <div class="gallery-scroll" id="galleryScroll">
+      <header class="gallery-head">
+        <p class="eyebrow">隠し — hidden gallery</p>
+        <h2 class="section-title"><span class="jp">侍の目</span>Through the <em>samurai's eye</em></h2>
+        <p class="gallery-sub">You found it. Some photos from along the way.</p>
+      </header>
+      <div class="photo-grid" id="photoGrid"></div>
+      <p class="gallery-foot"><a href="#home" class="btn" data-route="home">← Blink, back to the lake</a></p>
+    </div>
+    <div class="lightbox" id="lightbox" hidden>
+      <button class="lb-btn lb-close" id="lbClose" aria-label="Close">✕</button>
+      <button class="lb-btn lb-prev" id="lbPrev" aria-label="Previous photo">←</button>
+      <figure class="lb-figure"><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+      <button class="lb-btn lb-next" id="lbNext" aria-label="Next photo">→</button>
+    </div>
+  </section>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
   <script src="js/main.js"></script>
 </body>
 </html>

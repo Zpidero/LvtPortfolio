@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1100" viewBox="0 0 800 1100">
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f2c3a"/><stop offset=".55" stop-color="#3f7f8c"/><stop offset="1" stop-color="#bfe3e0"/></linearGradient>
+  <linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f7f8c"/><stop offset="1" stop-color="#0f2c3a"/></linearGradient></defs>
+  <rect width="800" height="682" fill="url(#s)"/>
+  <circle cx="544" cy="418" r="88" fill="#f4efe6" opacity=".9"/>
+  <path d="M0 682 L144 528 L240 594 L368 440 L496 616 L640 550 L800 638 L800 682Z" fill="#0f2c3a" opacity=".85"/>
+  <rect y="682" width="800" height="418" fill="url(#w)"/>
+  <g stroke="#bfe3e0" stroke-opacity=".35" stroke-width="3"><line x1="160" y1="726" x2="640" y2="726"/><line x1="216" y1="770" x2="600" y2="770"/><line x1="272" y1="814" x2="560" y2="814"/><line x1="328" y1="858" x2="520" y2="858"/><line x1="384" y1="902" x2="480" y2="902"/></g>
+  <text x="48" y="110" font-family="monospace" font-size="22" letter-spacing="4" fill="#fff" fill-opacity=".75">PLACEHOLDER 02 — ADD YOUR PHOTO</text>
+</svg>

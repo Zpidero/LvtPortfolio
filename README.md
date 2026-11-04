@@ -29,16 +29,20 @@ A Japanese-inspired single page with four "places", each reached with its own ca
 
 ```
 portfolio/
-├── index.html              # Main HTML
+├── index.html
 ├── css/
-│   └── style.css           # All styles, dark mode, animations, responsive
+│   └── style.css       
 ├── js/
+<<<<<<< HEAD
 │   └── main.js             # Water simulation, scenes, router & transitions
+=======
+│   └── main.js            
+>>>>>>> 81b00b915c97f82b917042be8b946137af858b05
 ├── assets/
 │   ├── cv/
-│   │   ├── cv-lluc-vivet-en.pdf    ← English CV (add yours here)
-│   │   └── cv-lluc-vivet-ca.pdf    ← Catalan CV (add yours here)
-│   └── images/                     ← Any images you want to add
+│   │   ├── cv-lluc-vivet-en.pdf
+│   │   └── cv-lluc-vivet-ca.pdf    
+│   └── images/                     
 └── README.md
 ```
 
@@ -66,6 +70,18 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 - [Shippori Mincho](https://fonts.google.com/specimen/Shippori+Mincho), [Zen Kaku Gothic New](https://fonts.google.com/specimen/Zen+Kaku+Gothic+New) + [Space Mono](https://fonts.google.com/specimen/Space+Mono) — Google Fonts
 - Deployed on [Render](https://render.com)
+
+---
+
+## CI/CD Pipeline
+
+This project uses two GitHub Actions workflows for automated validation and deployment.
+
+### CI — Continuous Integration (`ci.yml`)
+Triggered on every `push` or `pull request` to `main`. It spins up the static site with `serve` and runs a `curl` health check to confirm the site responds correctly.
+
+### CD — Continuous Deployment (`cd.yml`)
+Triggered automatically after the CI workflow passes. It uses a **Render Deploy Hook** — a private URL stored as a GitHub secret — to trigger a new deploy on [lvtportfolio.onrender.com](https://lvtportfolio.onrender.com). Deploys only happen on `main` and only if CI succeeds.
 
 ---
 
