@@ -2,254 +2,381 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lluc Vivet Torras — Developer</title>
-  <meta name="description" content="Computer Science Student at Universitat de Lleida. I build APIs, web apps, and tools from scratch."/>
+  <meta name="description" content="Computer Science Student at Universitat de Lleida. I build APIs, web apps, and tools from scratch." />
+  <meta name="theme-color" content="#1d1f3d" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body data-page="home">
 
-  <nav>
-    <span class="nav-logo">lvt.dev</span>
+  <!-- Intro veil -->
+  <div id="veil" aria-hidden="true"><span>湖</span></div>
+
+  <!-- Cursor -->
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav id="nav" aria-label="Main">
+    <a href="#home" class="nav-logo" data-route="home"><span class="seal">ル</span><span>lvt.dev</span></a>
     <ul class="nav-links">
-      <li><a href="#about">About</a></li>
-      <li><a href="#projects">Work</a></li>
-      <li><a href="#skills">Skills</a></li>
+      <li><a href="#home" data-route="home"><span class="jp">湖</span>Home</a></li>
+      <li><a href="#projects" data-route="projects"><span class="jp">作品</span>Projects</a></li>
+      <li><a href="#about" data-route="about"><span class="jp">私</span>About</a></li>
+      <li><a href="#contact" data-route="contact"><span class="jp">連絡</span>Contact</a></li>
     </ul>
   </nav>
 
-  <main>
+  <!-- The world: sky (about) / lake surface (home) / underwater (projects), stacked vertically -->
+  <div id="world" data-at="home">
 
-    <section id="hero">
-      <p class="hero-label">Computer Science Student</p>
-      <h1 class="hero-name">Lluc Vivet Torras</h1>
-      <a href="mailto:lluc@vivet.cat" class="hero-email">lluc@vivet.cat</a>
+    <!-- ============ SKY — ABOUT ============ -->
+    <section class="layer layer-sky" id="page-about" aria-label="About me">
+      <div class="stars a" aria-hidden="true"></div>
+      <div class="stars b" aria-hidden="true"></div>
+      <div class="moon" aria-hidden="true"></div>
+      <div class="cloud" style="top:22%;width:38vw;animation-duration:90s;animation-delay:-20s" aria-hidden="true"></div>
+      <div class="cloud" style="top:58%;width:52vw;animation-duration:120s;animation-delay:-70s" aria-hidden="true"></div>
+      <div class="cloud" style="top:80%;width:30vw;animation-duration:75s;animation-delay:-5s" aria-hidden="true"></div>
+      <svg class="crane" style="top:30%" viewBox="0 0 44 22" aria-hidden="true"><path d="M0 12 Q11 0 22 10 Q33 0 44 12 Q33 7 22 14 Q11 7 0 12Z" fill="currentColor"/></svg>
+      <svg class="crane" style="top:36%;animation-delay:-3s;width:30px" viewBox="0 0 44 22" aria-hidden="true"><path d="M0 12 Q11 0 22 10 Q33 0 44 12 Q33 7 22 14 Q11 7 0 12Z" fill="currentColor"/></svg>
+      <svg class="crane" style="top:18%;animation-delay:-19s;animation-duration:52s;width:36px" viewBox="0 0 44 22" aria-hidden="true"><path d="M0 12 Q11 0 22 10 Q33 0 44 12 Q33 7 22 14 Q11 7 0 12Z" fill="currentColor"/></svg>
 
-      <div class="hero-social">
-        <a href="https://github.com/Zpidero" target="_blank" class="social-btn" aria-label="GitHub">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" fill="currentColor"/>
-          </svg>
-          GitHub
-        </a>
-        <a href="https://linkedin.com/in/lluc-vivet-torras" target="_blank" class="social-btn" aria-label="LinkedIn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" fill="currentColor"/>
-          </svg>
-          LinkedIn
-        </a>
-      </div>
+      <div class="about-scroll" id="aboutScroll">
+        <div class="about-grid">
+          <div class="about-text">
+            <p class="eyebrow reveal" style="--i:0">02 — 私について</p>
+            <h2 class="section-title reveal" style="--i:1"><span class="jp">空の上</span>Building things <em>from scratch</em>.</h2>
+            <p class="lead reveal" style="--i:2">I'm a third-year Computer Science student at the Universitat de Lleida, passionate about software development and systems design. I enjoy building things from scratch and exploring new technologies — from REST APIs to Discord bots to web simulators.</p>
+            <p class="reveal" style="--i:3">Currently deepening my knowledge in Python, Docker, Django &amp; FastAPI. Always open to collaborating on interesting projects, especially through hackathons.</p>
+            <div class="cv-row reveal" style="--i:4">
+              <a href="assets/cv/CVLlucVivet_Eng.pdf" download class="btn">CV — English <span aria-hidden="true">↓</span></a>
+              <a href="assets/cv/CVLlucVivet_Cat.pdf" download class="btn">CV — Català <span aria-hidden="true">↓</span></a>
+            </div>
+          </div>
 
-      <div class="hero-cv">
-        <a href="assets/cv/CVLlucVivet_Eng.pdf" download class="cv-btn">Download CV — English</a>
-        <a href="assets/cv/CVLlucVivet_Cat.pdf" download class="cv-btn">Download CV — Català</a>
+          <div class="skills reveal" style="--i:3">
+            <div class="skill-group">
+              <h3><span class="jp">言語</span>Languages</h3>
+              <ul><li>Python</li><li>JavaScript</li><li>Java</li><li>C / C++</li><li>Haskell</li></ul>
+            </div>
+            <div class="skill-group">
+              <h3><span class="jp">表</span>Frontend</h3>
+              <ul><li>React / Next.js</li><li>TailwindCSS</li><li>HTML5 / CSS</li><li>Vite</li></ul>
+            </div>
+            <div class="skill-group">
+              <h3><span class="jp">裏</span>Backend</h3>
+              <ul><li>FastAPI</li><li>Django</li><li>Node.js</li><li>PostgreSQL</li></ul>
+            </div>
+            <div class="skill-group">
+              <h3><span class="jp">道具</span>Tooling</h3>
+              <ul><li>Docker</li><li>Git / GitHub</li><li>Linux</li><li>Unity / Unreal</li></ul>
+            </div>
+          </div>
+        </div>
+        <p class="layer-foot reveal" style="--i:5">↓ scroll down to return to the lake</p>
       </div>
     </section>
 
-    <section id="about">
-      <p class="section-label">About</p>
-      <div class="about-text">
-        <p>I'm a third-year Computer Science student at the Universitat de Lleida, passionate about software development and systems design. I enjoy building things from scratch and exploring new technologies — from REST APIs to Discord bots to web simulators.</p>
-        <p>Currently deepening my knowledge in Python, Docker, Django & FastAPI. Always open to collaborating on interesting projects, especially through hackathons.</p>
+    <!-- ============ SURFACE — HOME ============ -->
+    <section class="layer layer-surface" id="page-home" aria-label="Home">
+      <div class="surface-zoom" id="surfaceZoom">
+        <svg id="sceneSvg" class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1d1f3d"/>
+              <stop offset=".14" stop-color="#25264c"/>
+              <stop offset=".4" stop-color="#4d4174"/>
+              <stop offset=".64" stop-color="#97698c"/>
+              <stop offset=".84" stop-color="#e3937f"/>
+              <stop offset="1" stop-color="#f7c99b"/>
+            </linearGradient>
+            <radialGradient id="gSun">
+              <stop offset="0" stop-color="#ffd9b0" stop-opacity=".75"/>
+              <stop offset=".45" stop-color="#f7a37f" stop-opacity=".25"/>
+              <stop offset="1" stop-color="#f7a37f" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="gGlow">
+              <stop offset="0" stop-color="#ffb26b" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#ffb26b" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="gMist" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f6d2c0" stop-opacity="0"/>
+              <stop offset=".65" stop-color="#f6d2c0" stop-opacity=".42"/>
+              <stop offset="1" stop-color="#f6d2c0" stop-opacity=".12"/>
+            </linearGradient>
+            <linearGradient id="gLake" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#6a5578"/>
+              <stop offset=".3" stop-color="#2b2f4d"/>
+              <stop offset="1" stop-color="#0d1628"/>
+            </linearGradient>
+            <filter id="fBlur" x="-20%" y="-100%" width="140%" height="300%"><feGaussianBlur stdDeviation="8"/></filter>
+          </defs>
+
+          <!-- sky -->
+          <rect width="1600" height="562" fill="url(#gSky)"/>
+          <g fill="#fff4e6" opacity=".7">
+            <circle cx="120" cy="60" r="1.2"/><circle cx="340" cy="110" r="1"/><circle cx="560" cy="40" r="1.4"/>
+            <circle cx="780" cy="90" r="1"/><circle cx="980" cy="50" r="1.2"/><circle cx="1210" cy="120" r="1"/>
+            <circle cx="1420" cy="70" r="1.3"/><circle cx="1530" cy="150" r="1"/><circle cx="680" cy="150" r=".9"/>
+          </g>
+
+          <!-- sun -->
+          <circle cx="1150" cy="372" r="260" fill="url(#gSun)"/>
+          <circle cx="1150" cy="372" r="96" fill="#f6b48f"/>
+          <g fill="#5b4a7c" opacity=".55">
+            <rect x="960" y="352" width="380" height="7" rx="3.5"/>
+            <rect x="1010" y="380" width="300" height="5" rx="2.5"/>
+            <rect x="1060" y="404" width="220" height="4" rx="2"/>
+          </g>
+          <g fill="#f2b9a8" opacity=".35" filter="url(#fBlur)">
+            <ellipse cx="300" cy="250" rx="220" ry="18"/>
+            <ellipse cx="660" cy="300" rx="160" ry="12"/>
+            <ellipse cx="1400" cy="230" rx="200" ry="16"/>
+          </g>
+          <g fill="none" stroke="#2a2340" stroke-width="2" stroke-linecap="round">
+            <path d="M1040 250 q8 -7 16 0 q8 -7 16 0"/>
+            <path d="M1080 228 q6 -5 12 0 q6 -5 12 0"/>
+            <path d="M1010 276 q5 -4 10 0 q5 -4 10 0"/>
+          </g>
+
+          <!-- mountains -->
+          <path d="M0 562 L0 470 L110 448 L210 462 L330 430 L420 452 L560 418 L700 455 L820 440 L960 462 L1080 436 L1220 458 L1340 432 L1480 455 L1600 440 L1600 562Z" fill="#6f5e8e" opacity=".75"/>
+          <path d="M150 562 L455 318 Q520 282 585 318 L900 562Z" fill="#54467a"/>
+          <path d="M455 318 Q520 282 585 318 L566 336 L548 326 L530 344 L512 328 L494 342 L474 330Z" fill="#efdbe0" opacity=".85"/>
+          <path d="M0 562 L0 505 Q140 478 290 498 Q430 516 560 500 Q700 482 840 506 Q990 528 1120 504 Q1260 482 1400 500 Q1520 514 1600 502 L1600 562Z" fill="#382f57"/>
+          <rect x="0" y="486" width="1600" height="76" fill="url(#gMist)"/>
+
+          <!-- left shore + pines -->
+          <path d="M0 562 L0 522 Q110 506 230 516 Q360 528 450 546 Q500 556 540 562Z" fill="#19142b"/>
+          <g fill="#130f22">
+            <path d="M150 532 C146 500 172 480 160 452 C150 428 176 404 206 394" stroke="#130f22" stroke-width="7" fill="none"/>
+            <ellipse cx="206" cy="392" rx="54" ry="11"/>
+            <ellipse cx="150" cy="440" rx="40" ry="9"/>
+            <ellipse cx="196" cy="462" rx="58" ry="12"/>
+            <ellipse cx="128" cy="486" rx="36" ry="8"/>
+            <ellipse cx="180" cy="500" rx="44" ry="9"/>
+            <path d="M330 542 C326 518 342 502 336 482 C332 468 348 456 366 450" stroke="#130f22" stroke-width="5" fill="none"/>
+            <ellipse cx="366" cy="448" rx="40" ry="9"/>
+            <ellipse cx="350" cy="476" rx="44" ry="10"/>
+            <ellipse cx="320" cy="494" rx="30" ry="7"/>
+          </g>
+
+          <!-- right shore -->
+          <path d="M1600 562 L1600 530 Q1500 526 1420 546 Q1390 554 1370 562Z" fill="#19142b"/>
+          <g fill="#130f22">
+            <path d="M1530 536 C1534 516 1520 500 1528 482" stroke="#130f22" stroke-width="5" fill="none"/>
+            <ellipse cx="1528" cy="480" rx="34" ry="8"/>
+            <ellipse cx="1540" cy="504" rx="40" ry="9"/>
+          </g>
+
+          <!-- house on stilts -->
+          <circle cx="900" cy="478" r="150" fill="url(#gGlow)"/>
+          <g fill="#1a1216">
+            <rect x="818" y="514" width="6" height="56"/>
+            <rect x="858" y="514" width="6" height="56"/>
+            <rect x="936" y="514" width="6" height="56"/>
+            <rect x="976" y="514" width="6" height="56"/>
+          </g>
+          <rect x="700" y="548" width="100" height="5" fill="#22181f"/>
+          <g fill="#22181f"><rect x="712" y="550" width="4" height="20"/><rect x="744" y="550" width="4" height="20"/><rect x="776" y="550" width="4" height="20"/></g>
+          <rect x="822" y="450" width="156" height="60" fill="#f3cf94"/>
+          <g stroke="#5a3a2a" stroke-width="1.6">
+            <path d="M835 450 V510 M848 450 V510 M861 450 V510 M874 450 V510 M887 450 V510 M913 450 V510 M926 450 V510 M939 450 V510 M952 450 V510 M965 450 V510"/>
+            <path d="M822 465 H978 M822 480 H978 M822 495 H978"/>
+          </g>
+          <rect x="898" y="450" width="4" height="60" fill="#3a241c"/>
+          <rect x="820" y="450" width="5" height="60" fill="#2a1a1a"/>
+          <rect x="975" y="450" width="5" height="60" fill="#2a1a1a"/>
+          <rect x="796" y="508" width="208" height="8" fill="#2a1c1e"/>
+          <rect x="796" y="497" width="208" height="2.5" fill="#2a1c1e"/>
+          <g fill="#2a1c1e"><rect x="798" y="497" width="3" height="12"/><rect x="999" y="497" width="3" height="12"/></g>
+          <path d="M762 448 Q790 458 830 446 L856 410 L944 410 L970 446 Q1010 458 1038 448 L1030 460 Q900 467 770 460Z" fill="#211722"/>
+          <path d="M872 411 L900 388 L928 411Z" fill="#2c1e2c"/>
+          <rect x="858" y="406" width="84" height="5" rx="2" fill="#1a1219"/>
+          <circle cx="788" cy="474" r="24" fill="#ff9a5a" opacity=".3"/>
+          <path d="M788 458 V465" stroke="#1a1216" stroke-width="1.5"/>
+          <ellipse cx="788" cy="474" rx="7" ry="9" fill="#e8553a"/>
+
+          <!-- torii in the water -->
+          <g>
+            <rect x="1228" y="452" width="9" height="122" fill="#b5382b"/>
+            <rect x="1283" y="452" width="9" height="122" fill="#b5382b"/>
+            <rect x="1216" y="468" width="88" height="6" fill="#b5382b"/>
+            <rect x="1206" y="451" width="108" height="7" fill="#b5382b"/>
+            <path d="M1196 442 Q1260 452 1324 442 L1320 452 Q1260 460 1200 452Z" fill="#1f1418"/>
+          </g>
+
+          <!-- fallback lake (covered by the live water canvas) -->
+          <rect x="0" y="560" width="1600" height="340" fill="url(#gLake)" data-noreflect="1"/>
+        </svg>
+        <canvas id="lakeCanvas" aria-hidden="true"></canvas>
+      </div>
+      <canvas id="petalCanvas" aria-hidden="true"></canvas>
+
+      <div class="home-ui">
+        <div class="home-title">
+          <p class="eyebrow">Lleida · Catalunya — 2026</p>
+          <h1 class="name">
+            <span class="line"><span>Lluc Vivet</span></span>
+            <span class="line"><span>Torras</span></span>
+          </h1>
+          <p class="role">Computer Science Student — Universitat de Lleida<br><a href="mailto:lluc@vivet.cat">lluc@vivet.cat</a></p>
+        </div>
+
+        <p class="vert" aria-hidden="true">静かな湖のほとりで</p>
+
+        <ul class="home-menu">
+          <li><a class="menu-link" href="#projects" data-route="projects">
+            <span class="num">01 · dive below</span>
+            <span class="kanji">作品</span>
+            <span class="label">Projects</span>
+          </a></li>
+          <li><a class="menu-link" href="#about" data-route="about">
+            <span class="num">02 · rise above</span>
+            <span class="kanji">私</span>
+            <span class="label">About me</span>
+          </a></li>
+          <li><a class="menu-link" href="#contact" data-route="contact">
+            <span class="num">03 · step inside</span>
+            <span class="kanji">連絡</span>
+            <span class="label">Contact</span>
+          </a></li>
+        </ul>
+
+        <p class="hint" aria-hidden="true">Touch the water<br>scroll ↓ dive · ↑ rise</p>
       </div>
     </section>
 
-    <section id="projects">
-      <p class="section-label">Selected Work</p>
+    <!-- ============ UNDERWATER — PROJECTS ============ -->
+    <section class="layer layer-deep" id="page-projects" aria-label="Projects">
+      <canvas id="deepCanvas" aria-hidden="true"></canvas>
+      <canvas id="deepFx" aria-hidden="true"></canvas>
+      <div class="deep-shade" aria-hidden="true"></div>
 
-      <div class="project-tabs">
-        <button class="project-tab" data-filter="personal">Personal</button>
-        <button class="project-tab" data-filter="hackathon">Hackathons</button>
+      <div class="depth" aria-hidden="true">
+        <span class="depth-jp">深さ</span>
+        <div class="depth-track"><span class="depth-mark"></span></div>
+        <span class="depth-val" id="depthVal">4m</span>
       </div>
 
-      <div class="projects-grid">
-
-        <a class="project-item" data-category="personal" href="https://github.com/Zpidero/InazumaEleven_API" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">Inazuma Eleven VR API</span>
-            <span class="project-desc">A REST API built with FastAPI providing structured data about players, teams, elements, positions, and stats from Inazuma Eleven: Victory Road.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">FastAPI</span>
-              <span class="tag">REST API</span>
-              <span class="tag">Docker</span>
-            </div>
+      <div class="deep-scroll" id="deepScroll">
+        <div class="deep-head">
+          <div>
+            <p class="eyebrow reveal" style="--i:0">01 — 作品</p>
+            <h2 class="section-title reveal" style="--i:1"><span class="jp">水の底</span>Selected Work</h2>
           </div>
-          <span class="project-arrow">↗</span>
-        </a>
-
-        <a class="project-item" data-category="personal" href="https://github.com/Zpidero/ProjecteWeb" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">ProjecteWeb — FUTDraft Simulator</span>
-            <span class="project-desc">A web-based FUTDraft-style team builder inspired by the Inazuma Eleven universe. Draft players across seasons and test different strategies.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">Django</span>
-              <span class="tag">JavaScript</span>
-            </div>
+          <div class="tabs reveal" role="tablist" aria-label="Filter projects" style="--i:2">
+            <button class="tab" role="tab" aria-selected="true" data-filter="personal">Personal</button>
+            <button class="tab" role="tab" aria-selected="false" data-filter="hackathon">Hackathons</button>
           </div>
-          <span class="project-arrow">↗</span>
-        </a>
+        </div>
 
-        <a class="project-item" data-category="personal" href="https://github.com/Zpidero/Inazuma-Eleven-Discord-Bot-InaBot-" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">InaBot — Discord Bot</span>
-            <span class="project-desc">A Discord bot for the Inazuma Eleven franchise. Quick access to characters, teams, and techniques — all within Discord.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">Discord API</span>
-            </div>
-          </div>
-          <span class="project-arrow">↗</span>
-        </a>
+        <div class="cards">
+          <a class="card" data-category="personal" href="https://github.com/Zpidero/InazumaEleven_API" target="_blank" rel="noopener">
+            <div class="card-top"><span class="card-num">01</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">Inazuma Eleven VR API</h3>
+            <p class="card-desc">A REST API built with FastAPI providing structured data about players, teams, elements, positions, and stats from Inazuma Eleven: Victory Road.</p>
+            <div class="card-tags"><span>Python</span><span>FastAPI</span><span>REST API</span><span>Docker</span></div>
+            <span class="card-kanji" aria-hidden="true">壱</span>
+          </a>
 
-        <a class="project-item" data-category="personal" href="https://github.com/TralaleritosTralalas/SoftwareProject" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">StreamHub — Software Project</span>
-            <span class="project-desc">A university project — a platform that centralises multiple streaming services in one place, making it easier to manage and browse them all.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">University</span>
-            </div>
-          </div>
-          <span class="project-arrow">↗</span>
-        </a>
+          <a class="card" data-category="personal" href="https://github.com/Zpidero/ProjecteWeb" target="_blank" rel="noopener">
+            <div class="card-top"><span class="card-num">02</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">ProjecteWeb — FUTDraft Simulator</h3>
+            <p class="card-desc">A web-based FUTDraft-style team builder inspired by the Inazuma Eleven universe. Draft players across seasons and test different strategies.</p>
+            <div class="card-tags"><span>Python</span><span>Django</span><span>JavaScript</span></div>
+            <span class="card-kanji" aria-hidden="true">弐</span>
+          </a>
 
-        <a class="project-item" data-category="hackathon" href="https://github.com/Zpidero/translator-UAB" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">Translator UAB — UABTheHack</span>
-            <span class="project-desc">A pip library that translates Python code — variables and comments — from one language to another. Supports 50+ languages. Built at UABTheHack.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">pip library</span>
-              <span class="tag">UABTheHack</span>
-            </div>
-          </div>
-          <span class="project-arrow">↗</span>
-        </a>
+          <a class="card" data-category="personal" href="https://github.com/Zpidero/Inazuma-Eleven-Discord-Bot-InaBot-" target="_blank" rel="noopener">
+            <div class="card-top"><span class="card-num">03</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">InaBot — Discord Bot</h3>
+            <p class="card-desc">A Discord bot for the Inazuma Eleven franchise. Quick access to characters, teams, and techniques — all within Discord.</p>
+            <div class="card-tags"><span>Python</span><span>Discord API</span></div>
+            <span class="card-kanji" aria-hidden="true">参</span>
+          </a>
 
-        <a class="project-item" data-category="hackathon" href="https://github.com/Zpidero/Voyagers-Choice" target="_blank">
-          <div class="project-meta">
-            <span class="project-title">Voyager's Choice — HackUPC 2025</span>
-            <span class="project-desc">A hackathon project helping groups of friends living abroad agree on a travel destination together. Built at HackUPC 2025.</span>
-            <div class="project-tags">
-              <span class="tag">Python</span>
-              <span class="tag">HackUPC 2025</span>
-            </div>
-          </div>
-          <span class="project-arrow">↗</span>
-        </a>
+          <a class="card" data-category="personal" href="https://github.com/TralaleritosTralalas/SoftwareProject" target="_blank" rel="noopener">
+            <div class="card-top"><span class="card-num">04</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">StreamHub — Software Project</h3>
+            <p class="card-desc">A platform that centralises multiple streaming services in one place, making it easier to manage and browse them all.</p>
+            <div class="card-tags"><span>Python</span><span>University</span></div>
+            <span class="card-kanji" aria-hidden="true">肆</span>
+          </a>
 
+          <a class="card" data-category="hackathon" href="https://github.com/Zpidero/translator-UAB" target="_blank" rel="noopener" hidden>
+            <div class="card-top"><span class="card-num">05</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">Translator UAB</h3>
+            <p class="card-desc">A pip library that translates Python code — variables and comments — from one language to another. Supports 50+ languages. Built at UABTheHack.</p>
+            <div class="card-tags"><span>Python</span><span>pip library</span><span>UABTheHack</span></div>
+            <span class="card-kanji" aria-hidden="true">伍</span>
+          </a>
+
+          <a class="card" data-category="hackathon" href="https://github.com/Zpidero/Voyagers-Choice" target="_blank" rel="noopener" hidden>
+            <div class="card-top"><span class="card-num">06</span><span class="card-arrow" aria-hidden="true">↗</span></div>
+            <h3 class="card-title">Voyager's Choice</h3>
+            <p class="card-desc">A hackathon project helping groups of friends living abroad agree on a travel destination together. Built at HackUPC 2025.</p>
+            <div class="card-tags"><span>Python</span><span>HackUPC 2025</span></div>
+            <span class="card-kanji" aria-hidden="true">陸</span>
+          </a>
+        </div>
+
+        <p class="layer-foot">— the lake bed — <br>scroll up at the top to surface ↑</p>
       </div>
     </section>
+  </div>
 
-    <section id="skills">
-      <p class="section-label">Skills</p>
-      <div class="skills-grid">
+  <!-- ============ INSIDE THE HOUSE — CONTACT ============ -->
+  <section class="interior" id="page-contact" aria-label="Contact">
+    <div class="wall" aria-hidden="true"></div>
+    <div class="ceiling" aria-hidden="true"></div>
+    <div class="beam" aria-hidden="true"></div>
+    <div class="post l" aria-hidden="true"></div>
+    <div class="post r" aria-hidden="true"></div>
+    <div class="tatami" aria-hidden="true"></div>
+    <div class="andon" aria-hidden="true"></div>
 
-        <div class="skill-group">
-          <p class="skill-group-name">Languages</p>
-          <ul class="skill-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.914 0C5.82 0 6.2 2.656 6.2 2.656l.007 2.752h5.814v.826H3.9S0 5.789 0 11.969c0 6.18 3.403 5.959 3.403 5.959h2.031v-2.867s-.109-3.402 3.345-3.402h5.766s3.236.052 3.236-3.128V3.296S18.318 0 11.914 0zM8.708 1.906a1.048 1.048 0 1 1 0 2.097 1.048 1.048 0 0 1 0-2.097z"/><path d="M12.086 24c6.094 0 5.714-2.656 5.714-2.656l-.007-2.752h-5.814v-.826h8.121S24 18.211 24 12.031c0-6.18-3.403-5.959-3.403-5.959h-2.031v2.867s.109 3.402-3.345 3.402H9.455s-3.236-.052-3.236 3.128v5.234S5.682 24 12.086 24zm3.206-1.906a1.048 1.048 0 1 1 0-2.097 1.048 1.048 0 0 1 0 2.097z"/></svg>
-              Python
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/></svg>
-              JavaScript
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.851 18.56s-.917.534.653.714c1.902.218 2.874.187 4.969-.211 0 0 .552.346 1.321.646-4.699 2.013-10.633-.118-6.943-1.149M8.276 15.933s-1.028.761.542.924c2.032.209 3.636.227 6.413-.308 0 0 .384.389.987.602-5.679 1.661-12.007.13-7.942-1.218M13.116 11.475c1.158 1.333-.304 2.533-.304 2.533s2.939-1.518 1.589-3.418c-1.261-1.772-2.228-2.652 3.007-5.688 0-.001-8.216 2.051-4.292 6.573M19.33 20.504s.679.559-.747.991c-2.712.822-11.288 1.069-13.669.033-.856-.373.75-.89 1.254-.998.527-.113.828-.09.828-.09-.953-.671-6.156 1.317-2.643 1.887 9.58 1.553 17.462-.7 14.977-1.823M9.292 13.21s-4.362 1.036-1.544 1.412c1.189.159 3.561.123 5.77-.062 1.806-.152 3.618-.477 3.618-.477s-.637.272-1.098.587c-4.429 1.165-12.986.623-10.522-.568 2.082-1.006 3.776-.892 3.776-.892M17.116 17.584c4.503-2.34 2.421-4.589.968-4.285-.355.074-.515.138-.515.138s.132-.207.385-.297c2.875-1.011 5.086 2.981-.928 4.562 0-.001.07-.062.09-.118M14.401 0s2.494 2.494-2.365 6.33c-3.896 3.077-.888 4.832-.001 6.836-2.274-2.053-3.943-3.858-2.824-5.539 1.644-2.469 6.197-3.665 5.19-7.627M9.734 23.924c4.322.277 10.959-.153 11.116-2.198 0 0-.302.775-3.572 1.391-3.688.694-8.239.613-10.937.168 0-.001.553.457 3.393.639"/></svg>
-              Java
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.394 6c-.167-.29-.398-.543-.652-.69L12.926.22c-.509-.294-1.34-.294-1.848 0L2.26 5.31c-.508.293-.923 1.013-.923 1.6v10.18c0 .294.104.62.271.91.167.29.398.543.652.69l8.816 5.09c.508.293 1.34.293 1.848 0l8.816-5.09c.254-.147.485-.4.652-.69.167-.29.27-.616.27-.91V6.91c.003-.294-.1-.62-.268-.91zM12 19.11c-3.92 0-7.109-3.19-7.109-7.11 0-3.92 3.19-7.11 7.11-7.11a7.133 7.133 0 016.156 3.553l-3.076 1.78a3.567 3.567 0 00-3.08-1.78A3.555 3.555 0 008.444 12 3.555 3.555 0 0012 15.555a3.57 3.57 0 003.08-1.778l3.078 1.78A7.135 7.135 0 0112 19.11zm7.11-6.715h-.79v.79h-.79v-.79h-.79v-.79h.79v-.79h.79v.79h.79zm2.962 0h-.79v.79h-.79v-.79h-.79v-.79h.79v-.79h.79v.79h.79z"/></svg>
-              C / C++
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0zm6.5 5.5h2l2 3.75L12.5 5.5h2L11 11.5v5.25H9V11.5z"/></svg>
-              Haskell
-            </li>
-          </ul>
-        </div>
-
-        <div class="skill-group">
-          <p class="skill-group-name">Frontend</p>
-          <ul class="skill-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z"/></svg>
-              React / Next.js
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z"/></svg>
-              TailwindCSS
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg>
-              HTML5 / CSS
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.805 2.677L12.548 20.315a.427.427 0 0 1-.761-.004L2.195 2.677a.427.427 0 0 1 .46-.616l9.668 2.12a.43.43 0 0 0 .183 0l9.64-2.12a.427.427 0 0 1 .459.616z"/></svg>
-              Vite
-            </li>
-          </ul>
-        </div>
-
-        <div class="skill-group">
-          <p class="skill-group-name">Backend</p>
-          <ul class="skill-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.376 0 0 5.376 0 12c0 6.624 5.376 12 12 12 6.624 0 12-5.376 12-12C24 5.376 18.624 0 12 0zm.36 20.16v-6.696h-3.84L13.08 3.84v6.696h3.84L12.36 20.16z"/></svg>
-              FastAPI
-            </li>
-            <li>
-              <span class="skill-icon-wrap" data-icon="django"></span>
-              Django
-            </li>
-            <li>
-              <span class="skill-icon-wrap" data-icon="nodedotjs"></span>
-              Node.js
-            </li>
-            <li>
-              <span class="skill-icon-wrap" data-icon="postgresql"></span>
-              PostgreSQL
-            </li>
-          </ul>
-        </div>
-
-        <div class="skill-group">
-          <p class="skill-group-name">Tooling</p>
-          <ul class="skill-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.119a.185.185 0 0 0-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 0 0 .186-.186V3.574a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 0 0 .186-.186V6.29a.186.186 0 0 0-.186-.185h-2.118a.185.185 0 0 0-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 0 0 .184-.186V6.29a.185.185 0 0 0-.185-.185H8.1a.185.185 0 0 0-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 0 0 .185-.186V6.29a.185.185 0 0 0-.185-.185H5.136a.186.186 0 0 0-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 0 0 .186-.185V9.006a.186.186 0 0 0-.186-.186h-2.118a.185.185 0 0 0-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 0 0 .185-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.186.186 0 0 0-.186.185v1.888c0 .102.084.185.186.185m-2.92 0h2.12a.186.186 0 0 0 .184-.185V9.006a.185.185 0 0 0-.184-.186h-2.12a.185.185 0 0 0-.185.186v1.887c0 .102.083.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 0 0-.75.748 11.376 11.376 0 0 0 .692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 0 0 3.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/></svg>
-              Docker
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-              Git / GitHub
-            </li>
-            <li>
-              <span class="skill-icon-wrap" data-icon="linux"></span>
-              Linux
-            </li>
-            <li>
-              <span class="skill-icon-wrap" data-icon="unity"></span>
-              Unity / Unreal
-            </li>
-          </ul>
-        </div>
-
+    <div class="room">
+      <div class="marumado" aria-hidden="true">
+        <div class="win-moon"></div>
+        <div class="win-hills"></div>
+        <canvas id="winCanvas"></canvas>
       </div>
-    </section>
 
-  </main>
+      <div class="kakejiku">
+        <div class="scroll-rod"></div>
+        <div class="scroll-body">
+          <div class="scroll-paper">
+            <p class="scroll-kanji" aria-hidden="true">連絡</p>
+            <div class="scroll-content">
+              <p class="eyebrow dark">03 — Contact</p>
+              <h2>Let's make something together.</h2>
+              <a href="mailto:lluc@vivet.cat" class="contact-email">lluc@vivet.cat</a>
+              <ul class="contact-links">
+                <li><a href="https://github.com/Zpidero" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a></li>
+                <li><a href="https://linkedin.com/in/lluc-vivet-torras" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a></li>
+                <li><a href="assets/cv/CVLlucVivet_Eng.pdf" download>CV — English <span aria-hidden="true">↓</span></a></li>
+                <li><a href="assets/cv/CVLlucVivet_Cat.pdf" download>CV — Català <span aria-hidden="true">↓</span></a></li>
+              </ul>
+            </div>
+            <span class="hanko" aria-hidden="true">ルック</span>
+          </div>
+        </div>
+        <div class="scroll-rod"></div>
+      </div>
+    </div>
 
-  <footer>
-    <p>© 2026 Lluc Vivet Torras</p>
-    <p>Built with care</p>
-  </footer>
+    <a href="#home" class="exit" data-route="home">← Back to the lake</a>
+    <p class="copy">© 2026 Lluc Vivet Torras</p>
+
+    <div class="shoji l" aria-hidden="true"></div>
+    <div class="shoji r" aria-hidden="true"></div>
+  </section>
 
   <script src="js/main.js"></script>
 </body>

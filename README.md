@@ -8,11 +8,19 @@ Live at: `https://lvtportfolio.onrender.com/`
 
 ## Features
 
-- Minimal & clean design with dark mode support
-- Fully responsive (mobile, tablet, desktop)
-- Scroll reveal animations
-- Project filter tabs (Personal / Hackathons)
-- CV download in English and Català
+A Japanese-inspired single page with four "places", each reached with its own camera move:
+
+| Page | Place | Transition |
+|------|-------|------------|
+| Home (湖) | A lake at dusk with a house on stilts, a torii and falling sakura | — |
+| Projects (作品) | Underwater — koi, bubbles, seaweed, light rays | The camera dives below the surface |
+| About (私) | The night sky above the lake — moon, stars, cranes | The camera rises into the sky |
+| Contact (連絡) | Inside the house — round window, hanging scroll | Zoom into the lit doorway, shoji doors slide open |
+
+- The water reacts to the cursor or touch (a ripple simulation on canvas) on the lake, underwater and in the round window
+- Scroll, swipe or use the arrow keys on Home to dive (↓) or rise (↑); `Esc` goes back to the lake
+- Hash routing (`#projects`, `#about`, `#contact`), so the back button and deep links work
+- Respects `prefers-reduced-motion`
 - No frameworks, no build step — pure HTML, CSS and JS
 
 ---
@@ -25,7 +33,7 @@ portfolio/
 ├── css/
 │   └── style.css           # All styles, dark mode, animations, responsive
 ├── js/
-│   └── main.js             # Scroll reveal, project filter tabs, active nav
+│   └── main.js             # Water simulation, scenes, router & transitions
 ├── assets/
 │   ├── cv/
 │   │   ├── cv-lluc-vivet-en.pdf    ← English CV (add yours here)
@@ -56,8 +64,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Built with
 
-- [DM Sans](https://fonts.google.com/specimen/DM+Sans) + [DM Mono](https://fonts.google.com/specimen/DM+Mono) — Google Fonts
-- [Simple Icons](https://simpleicons.org/) — skill icons
+- [Shippori Mincho](https://fonts.google.com/specimen/Shippori+Mincho), [Zen Kaku Gothic New](https://fonts.google.com/specimen/Zen+Kaku+Gothic+New) + [Space Mono](https://fonts.google.com/specimen/Space+Mono) — Google Fonts
 - Deployed on [Render](https://render.com)
 
 ---
