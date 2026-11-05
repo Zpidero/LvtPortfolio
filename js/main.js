@@ -695,13 +695,14 @@
   /* =========================================================
      Router + scene transitions
      ========================================================= */
-  const PAGES  = ['home', 'projects', 'about', 'contact', 'gallery'];
+  const PAGES  = ['home', 'projects', 'about', 'contact', 'gallery', 'ski'];
   const TITLES = {
     home: 'Lluc Vivet Torras — Developer',
     projects: 'Projects — Lluc Vivet Torras',
     about: 'About — Lluc Vivet Torras',
     contact: 'Contact — Lluc Vivet Torras',
-    gallery: '侍の目 — Hidden gallery'
+    gallery: '侍の目 — Hidden gallery',
+    ski: '雪の道 — Snow Run'
   };
   const MOVE = reduceMotion ? 450 : 1500;
 
@@ -710,7 +711,7 @@
   const interior   = $('#page-contact');
   const aboutScroll = $('#aboutScroll');
   const layers = {
-    home: $('#page-home'), projects: layerDeep, about: $('#page-about'), contact: interior, gallery: $('#page-gallery')
+    home: $('#page-home'), projects: layerDeep, about: $('#page-about'), contact: interior, gallery: $('#page-gallery'), ski: $('#page-ski')
   };
   const state  = { page: null, busy: false, queued: null };
   const active = new Set();
@@ -728,7 +729,8 @@
     }
     document.title = TITLES[p];
     if (p === 'projects') revealCards();
-    if (p === 'gallery') loadGallery();
+    if (p === 'gallery') loadGallery().then(() => { if (lake3d) ensureGallery3D(); });
+    if (p === 'ski' && !state.busy && state.page === null) ensureSki().then(g => g && g.show());
   }
 
   function setZoomOrigin() {
@@ -794,9 +796,11 @@
       interior.classList.add('open');
       await sleep(fast ? 500 : 950);
       active.delete('home');
-    } else if (to === 'gallery' || from === 'gallery') {   // (2D fallback) the iris opens / closes
-      active.add(to === 'gallery' ? from : to);
-      if (from === 'gallery') world.dataset.at = to === 'contact' ? 'home' : to;
+    } else if (to === 'gallery' || from === 'gallery' || to === 'ski' || from === 'ski') {   // (2D fallback) fade
+      active.add(to === 'gallery' || to === 'ski' ? from : to);
+      if (from === 'gallery' || from === 'ski') world.dataset.at = to === 'contact' ? 'home' : to;
+      if (to === 'ski') ensureSki().then(() => skiGame && skiGame.show());
+      if (from === 'ski' && skiGame) skiGame.hide();
       await sleep(d * 0.8);
     } else if (from === 'contact' && to === 'home') {      // step back outside
       interior.classList.remove('open');
@@ -815,24 +819,60 @@
     const ms = lake3d.travelTime(from, to);
     root.style.setProperty('--move', ms + 'ms');
     body.classList.add('in-transit');
+    if (from === 'gallery') {                                         // the iris closes first, then we pull out of the eye
+      closeLightbox(true);
+      body.classList.add('iris-closing');
+      await sleep(reduceMotion ? 200 : 1150);
+      if (gallery3d) gallery3d.stop();
+      body.classList.remove('iris-closing');
+    }
     if (from === 'contact') interior.classList.remove('show', 'open');
-    if (from === 'gallery') closeLightbox();
+    if (from === 'ski' && skiGame) skiGame.hide();
+    if (to === 'ski') ensureSki();
     if (to === 'projects') { deepScroll.scrollTop = 0; updateDepth(); }
     if (to === 'about') { aboutScroll.scrollTop = 0; lake3d.setScroll('about', 0); }
-    if (to === 'gallery') { loadGallery(); $('#galleryScroll').scrollTop = 0; }
+    if (to === 'gallery') { loadGallery().then(ensureGallery3D); $('#galleryScroll').scrollTop = 0; }
     markPage(to);
     const done = lake3d.travel(from, to, ms);
-    await sleep(ms * (to === 'gallery' ? 0.97 : 0.7));   // the iris only opens once we're inside the pupil
+    await sleep(ms * (to === 'gallery' ? 0.97 : to === 'ski' ? 0.9 : 0.7));   // the iris only opens once we're inside the pupil
+    if (to === 'gallery' && gallery3d) gallery3d.start();
+    if (to === 'ski') { await ensureSki(); if (skiGame) skiGame.show(); }
     body.classList.remove('in-transit');
     if (to === 'contact') interior.classList.add('show', 'open');
     await done;
     state.page = to;
   }
 
+  /* ---------- Snow Run (ski mini-game) ---------- */
+  let skiGame = null, skiLoading = null;
+  function ensureSki() {
+    if (skiGame) return Promise.resolve(skiGame);
+    if (!skiLoading) skiLoading = import('./skigame.js')
+      .then(mod => { skiGame = mod.createSkiGame({ container: $('#page-ski'), reduceMotion }); return skiGame; })
+      .catch(e => { console.warn('Ski game unavailable:', e); skiLoading = null; });
+    return skiLoading;
+  }
+
   /* ---------- Hidden gallery ---------- */
+  let gallery3d = null, gallery3dLoading = null;
+  function ensureGallery3D() {
+    if (gallery3d || gallery3dLoading || !lake3d || !photos.length) return gallery3dLoading;
+    gallery3dLoading = import('./gallery3d.js').then(mod => {
+      gallery3d = mod.createGallery3D({
+        container: $('#page-gallery'), photos, reduceMotion,
+        onOpen: (i, rect) => openLightbox(i, rect),
+        onHover: on => { hover3D = on; syncEnso(); }
+      });
+      $('#page-gallery').classList.add('g3d');
+      if (body.dataset.page === 'gallery' && !body.classList.contains('in-transit')) gallery3d.start();
+    }).catch(e => { console.warn('3D gallery unavailable, keeping the grid:', e); });
+    return gallery3dLoading;
+  }
   const photoGrid = $('#photoGrid');
-  const lightbox = $('#lightbox'), lbImg = $('#lbImg'), lbCap = $('#lbCap');
-  let photos = [], lbIndex = 0, galleryLoaded = null;
+  const lightbox = $('#lightbox'), lbImg = $('#lbImg'), lbCap = $('#lbCap'), lbCount = $('#lbCount');
+  let photos = [], lbIndex = 0, galleryLoaded = null, lbBusy = false;
+  const EASE = 'cubic-bezier(.2, .8, .2, 1)';
+
   function loadGallery() {
     if (galleryLoaded) return galleryLoaded;
     galleryLoaded = fetch('assets/gallery/photos.json', { cache: 'no-cache' })
@@ -851,28 +891,100 @@
           if (p.caption) { const cap = document.createElement('figcaption'); cap.textContent = p.caption; fig.appendChild(cap); }
           fig.addEventListener('click', () => openLightbox(i));
           fig.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(i); } });
+          // 3D tilt + moving shine that follows the cursor
+          if (finePointer && !reduceMotion) {
+            fig.addEventListener('pointermove', e => {
+              const r = fig.getBoundingClientRect();
+              const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+              fig.classList.add('tilting');
+              fig.style.setProperty('--ry', ((px - 0.5) * 10).toFixed(2) + 'deg');
+              fig.style.setProperty('--rx', ((0.5 - py) * 8).toFixed(2) + 'deg');
+              fig.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+              fig.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+            });
+            fig.addEventListener('pointerleave', () => {
+              fig.classList.remove('tilting');
+              fig.style.setProperty('--rx', '0deg'); fig.style.setProperty('--ry', '0deg');
+            });
+          }
           photoGrid.appendChild(fig);
         });
       })
       .catch(() => { photoGrid.innerHTML = '<p class="gallery-empty">Couldn\'t load the gallery.</p>'; galleryLoaded = null; });
     return galleryLoaded;
   }
-  function showPhoto(i) {
+
+  const thumbOf = i => photoGrid.children[i] && photoGrid.children[i].querySelector('img');
+  function setPhoto(i) {
     lbIndex = (i + photos.length) % photos.length;
     lbImg.src = photos[lbIndex].src; lbImg.alt = photos[lbIndex].caption;
     lbCap.textContent = photos[lbIndex].caption;
+    lbCount.textContent = `${String(lbIndex + 1).padStart(2, '0')} / ${String(photos.length).padStart(2, '0')}`;
   }
-  function openLightbox(i) { showPhoto(i); lightbox.hidden = false; $('#lbClose').focus(); }
-  function closeLightbox() { lightbox.hidden = true; }
-  $('#lbClose').addEventListener('click', closeLightbox);
-  $('#lbPrev').addEventListener('click', () => showPhoto(lbIndex - 1));
-  $('#lbNext').addEventListener('click', () => showPhoto(lbIndex + 1));
-  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+  // FLIP: the photo grows out of its thumbnail, and shrinks back into it
+  function flipFrom(thumb, reverse) {
+    const a = thumb.getBoundingClientRect ? thumb.getBoundingClientRect() : thumb, b = lbImg.getBoundingClientRect();
+    if (!a.width || !b.width) return Promise.resolve();
+    const from = `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+    const frames = [{ transform: from, borderRadius: '14px', opacity: 0.6 }, { transform: 'none', borderRadius: '10px', opacity: 1 }];
+    return lbImg.animate(reverse ? frames.reverse() : frames, { duration: reduceMotion ? 1 : 560, easing: EASE, fill: 'both' }).finished;
+  }
+  async function openLightbox(i, rect) {
+    if (lbBusy || !photos.length) return;
+    lbBusy = true;
+    setPhoto(i);
+    lightbox.hidden = false;
+    try { await lbImg.decode(); } catch {}
+    requestAnimationFrame(() => lightbox.classList.add('open'));
+    const t = rect || thumbOf(lbIndex);
+    if (rect) await flipFrom(rect, false);
+    else if (t) { t.style.visibility = 'hidden'; await flipFrom(t, false); t.style.visibility = ''; }
+    lbBusy = false;
+    $('#lbClose').focus({ preventScroll: true });
+  }
+  async function closeLightbox(instant) {
+    if (lightbox.hidden) return;
+    const t = gallery3d ? gallery3d.cardRectFor(lbIndex) : thumbOf(lbIndex);
+    if (!instant && t && !lbBusy) {
+      lbBusy = true;
+      lightbox.classList.remove('open');
+      if (t.style) t.style.visibility = 'hidden';
+      await flipFrom(t, true);
+      if (t.style) t.style.visibility = '';
+      lbBusy = false;
+    }
+    lightbox.classList.remove('open');
+    lightbox.hidden = true;
+    lbImg.getAnimations().forEach(a => a.cancel());
+  }
+  // crossfade + slide between photos
+  async function stepPhoto(dir) {
+    if (lbBusy || photos.length < 2) return;
+    lbBusy = true;
+    const d = reduceMotion ? 1 : 260;
+    await lbImg.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-dir * 40}px) scale(.98)` }], { duration: d, easing: 'ease-in', fill: 'forwards' }).finished;
+    setPhoto(lbIndex + dir);
+    try { await lbImg.decode(); } catch {}
+    lbImg.getAnimations().forEach(a => a.cancel());
+    await lbImg.animate([{ opacity: 0, transform: `translateX(${dir * 40}px) scale(.98)` }, { opacity: 1, transform: 'none' }], { duration: d + 120, easing: EASE }).finished;
+    lbBusy = false;
+  }
+  $('#lbClose').addEventListener('click', () => closeLightbox());
+  $('#lbPrev').addEventListener('click', () => stepPhoto(-1));
+  $('#lbNext').addEventListener('click', () => stepPhoto(1));
+  lightbox.addEventListener('click', e => { if (e.target === lightbox || e.target.classList.contains('lb-figure')) closeLightbox(); });
+  let lbTouch = null;
+  lightbox.addEventListener('touchstart', e => { lbTouch = e.touches[0].clientX; }, { passive: true });
+  lightbox.addEventListener('touchend', e => {
+    if (lbTouch == null) return;
+    const dx = e.changedTouches[0].clientX - lbTouch; lbTouch = null;
+    if (Math.abs(dx) > 50) stepPhoto(dx < 0 ? 1 : -1);
+  }, { passive: true });
   addEventListener('keydown', e => {
     if (lightbox.hidden) return;
     if (e.key === 'Escape') { closeLightbox(); e.stopImmediatePropagation(); }
-    else if (e.key === 'ArrowLeft') { showPhoto(lbIndex - 1); e.stopImmediatePropagation(); }
-    else if (e.key === 'ArrowRight') { showPhoto(lbIndex + 1); e.stopImmediatePropagation(); }
+    else if (e.key === 'ArrowLeft') { stepPhoto(-1); e.stopImmediatePropagation(); }
+    else if (e.key === 'ArrowRight') { stepPhoto(1); e.stopImmediatePropagation(); }
   }, true);
 
   async function go(target) {
@@ -983,8 +1095,11 @@
     last = now;
     const t = now / 1000;
 
+    // pause the lake only once we're settled in the gallery — the camera flight must finish first,
+    // otherwise its promise never resolves and the router stays busy (you couldn't leave the eye)
+    const inGallery = (gallery3d && state.page === 'gallery' && !state.busy) || (skiGame && state.page === 'ski' && !state.busy);
     if (lake3d) {
-      lake3d.render(dt, t);
+      if (!inGallery) lake3d.render(dt, t);
     } else if (active.has('home')) {
       if (!reduceMotion && Math.random() < dt * 0.6) {
         lake.drop(rand(2, lake.w - 2), rand(lake.h * 0.1, lake.h - 2), 1.5, 70);
@@ -1019,6 +1134,8 @@
     setZoomOrigin();
     layoutInk();
     if (lake3d) lake3d.resize(W, H);
+    if (gallery3d) gallery3d.resize();
+    if (skiGame) skiGame.resize();
     if (state.page === 'contact') layoutWin();
     return p;
   }
@@ -1032,13 +1149,17 @@
   let lake3d = null;
   async function load3D() {
     try {
-      const mod = await import('./scene3d.js');
+      let mod;
+      try { mod = await import('./scene3d.js'); }
+      catch (e) { await sleep(800); mod = await import('./scene3d.js?retry=1'); }   // flaky CDN: one retry
       lake3d = mod.createLake3D({
         container: $('#stage'), reduceMotion, initialPage: state.page || pageFromHash(),
         onNavigate: p => navigate(p),
         onHover: on => { hover3D = on; syncEnso(); }
       });
       body.classList.add('three-on');
+      if (state.page === 'gallery') loadGallery().then(ensureGallery3D);
+      if (/[?&]debug\b/.test(location.search)) window.__lake3d = lake3d;   // test hook (only with ?debug)
       if (state.page === 'projects') updateDepth();
     } catch (e) {
       console.warn('3D lake unavailable, using the 2D one:', e);

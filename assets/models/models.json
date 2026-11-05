@@ -1,0 +1,19 @@
+{
+  "models": [
+    {
+      "name": "samurai",
+      "file": "samurai.glb",
+      "url": "assets/models/samurai.glb",
+      "description": "A Japanese samurai kneeling in seiza (sitting on his heels), full body, facing forward, hands resting flat on his thighs. Black lacquered lamellar armor (do cuirass) laced with red silk cords, black shoulder guards (sode) with red lacing, dark indigo hakama trousers folded under his knees. Kabuto helmet in black lacquer with a large golden crescent crest (kuwagata) on the front, flared neck guard. Dark red menpo half-mask covering mouth and chin, eyes visible. A katana in a black scabbard lying on the floor in front of his knees. Compact, solid pose, detailed armor plates.",
+      "kind": "object",
+      "style": "stylized",
+      "textured": false,
+      "rigged": false,
+      "animations": 0,
+      "job_id": "20261104-211318-e74a9f",
+      "created": "2026-11-04 21:14",
+      "size_kb": 252.9,
+      "compression": "meshopt"
+    }
+  ]
+}

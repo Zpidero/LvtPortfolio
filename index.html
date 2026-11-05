@@ -251,7 +251,7 @@
           </a></li>
         </ul>
 
-        <p class="hint" aria-hidden="true">Move across the water · click to float a lantern<br>Click the house to enter · the torii to rise<br>scroll ↓ dive · ↑ rise</p>
+        <p class="hint" aria-hidden="true">Move across the water · click to float a lantern<br>Click the house to enter · the torii to rise · the mountain to ski<br>scroll ↓ dive · ↑ rise</p>
       </div>
     </section>
 
@@ -306,7 +306,7 @@
 
           <a class="card" data-category="personal" href="https://github.com/TralaleritosTralalas/SoftwareProject" target="_blank" rel="noopener">
             <div class="card-top"><span class="card-num">04</span><span class="card-arrow" aria-hidden="true">↗</span></div>
-            <h3 class="card-title">StreamHub — Software Project</h3>
+            <h3 class="card-title">StreamSync — Software Project</h3>
             <p class="card-desc">A platform that centralises multiple streaming services in one place, making it easier to manage and browse them all.</p>
             <div class="card-tags"><span>Python</span><span>University</span></div>
             <span class="card-kanji" aria-hidden="true">肆</span>
@@ -407,14 +407,47 @@
       </header>
       <div class="photo-grid" id="photoGrid"></div>
       <p class="gallery-foot"><a href="#home" class="btn" data-route="home">← Blink, back to the lake</a></p>
+      <p class="gallery-hint" aria-hidden="true"><span class="hint-fine">drag to drift · scroll to fly · click a photo</span><span class="hint-touch">drag to drift · tap a photo</span></p>
     </div>
     <div class="lightbox" id="lightbox" hidden>
       <button class="lb-btn lb-close" id="lbClose" aria-label="Close">✕</button>
       <button class="lb-btn lb-prev" id="lbPrev" aria-label="Previous photo">←</button>
-      <figure class="lb-figure"><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+      <figure class="lb-figure"><img id="lbImg" alt=""><figcaption><span class="lb-count" id="lbCount"></span><span id="lbCap"></span></figcaption></figure>
       <button class="lb-btn lb-next" id="lbNext" aria-label="Next photo">→</button>
     </div>
   </section>
+
+  <!-- ============ SNOW RUN — ski mini-game on the volcano ============ -->
+  <section class="ski" id="page-ski" aria-label="Snow Run ski mini-game">
+    <div class="ski-hud" aria-live="off">
+      <div><span class="ski-label">Score</span><b id="skiScore">0</b></div>
+      <div><span class="ski-label">Speed</span><b id="skiSpeed">0</b><small>km/h</small></div>
+      <div><span class="ski-label">Best</span><b id="skiBest">0</b></div>
+    </div>
+    <p class="ski-toast" id="skiToast" aria-hidden="true"></p>
+
+    <div class="ski-panel" id="skiStart">
+      <p class="eyebrow">山 — the mountain</p>
+      <h2 class="section-title"><span class="jp">雪の道</span>Snow Run</h2>
+      <p class="ski-text">Race down the volcano. Dodge the pines and rocks, ride through the <b>torii</b> for +100, grab gold <b>koban</b> for +25. It only gets faster.</p>
+      <ul class="ski-keys">
+        <li><kbd>Mouse</kbd> / <kbd>←</kbd><kbd>→</kbd> steer</li>
+        <li><kbd>Hold click</kbd> / <kbd>Space</kbd> tuck — faster, ×1.5 points</li>
+      </ul>
+      <button class="btn ski-go" id="skiGo">Start the run ⏎</button>
+      <a href="#home" class="ski-exit" data-route="home">← back to the lake</a>
+    </div>
+
+    <div class="ski-panel" id="skiOver" hidden>
+      <p class="eyebrow">転倒 — wipeout</p>
+      <h2 class="section-title">Into the snow!</h2>
+      <p class="ski-final">Score <b id="skiFinal">0</b> <span>·</span> Best <b id="skiFinalBest">0</b></p>
+      <button class="btn ski-go" id="skiRetry">Ride again ⏎</button>
+      <a href="#home" class="ski-exit" data-route="home">← back to the lake</a>
+    </div>
+  </section>
+
+  <div class="iris-ring" aria-hidden="true"></div>
 
   <script type="importmap">
     {

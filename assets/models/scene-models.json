@@ -1,0 +1,16 @@
+{
+  "samurai": {
+    "file": "samurai.glb",
+    "height": 0.62,
+    "paint": "samurai",
+    "projection": {
+      "image": "samurai-albedo.webp",
+      "bbox": [
+        0.167,
+        0.0635,
+        0.8467,
+        0.9346
+      ]
+    }
+  }
+}

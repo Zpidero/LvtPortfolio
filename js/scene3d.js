@@ -12,6 +12,9 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { makeEyeMaterial } from './eyeShader.js';
 
 const V3 = THREE.Vector3;
 const C  = hex => new THREE.Color(hex);
@@ -70,6 +73,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   const camera = new THREE.PerspectiveCamera(45, W / H, 0.05, 900);
   const SUN_DIR  = new V3(0.36, 0.085, -1).normalize();
+  let volcano = null, skiNight = 1;
   const MOON_DIR = new V3(0.04, 0.55, -1).normalize();
 
   /* =========================================================
@@ -245,8 +249,9 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     }
     g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
     g.computeVertexNormals();
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, emissive: '#000000' }));
     m.position.set(-38, 15, -118);
+    volcano = m;                               // clickable: the ski mini-game lives up there
     scene.add(m);
   }
   ridge(-62, 0.6, 2.4, '#382f57', 11, 1.6);
@@ -265,6 +270,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   }
 
   const silhouette = new THREE.MeshLambertMaterial({ color: '#1a152c' });
+  // (volcano is assigned in the mountains block above)
   const pineMat    = new THREE.MeshLambertMaterial({ color: '#141022' });
   function shore(x, z, sx, sz) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), silhouette);
@@ -527,84 +533,80 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     house.add(tr);
   }
 
-  /* ---------- the samurai on the roof (click him → his eye → the hidden gallery) ---------- */
+  /* ---------- the samurai, kneeling in seiza inside the house by the round window
+     (click him on the Contact page → his eye → the hidden gallery).
+     If assets/models/samurai.glb exists it replaces this procedural figure. ---------- */
   const samurai = new THREE.Group();
   const samuraiHead = new THREE.Group();
+  const samuraiProc = new THREE.Group();       // the hand-built figure (fallback for the GLB)
   const eyeMat = new THREE.MeshBasicMaterial({ color: '#ffc861' });
-  const EYE_LOCAL = new V3(-0.027, 0.712, 0.07);        // his right eye, in samurai space (head at rest)
-  let bannerGeo, bannerBase;
+  const D = 0.2;                                // how much lower the upper body sits when kneeling
+  const EYE_LOCAL = new V3(-0.027, 0.712 - D, 0.07);
   {
     const indigo = new THREE.MeshLambertMaterial({ color: '#1e2a48' });
     const lacquer = new THREE.MeshLambertMaterial({ color: '#1c1417' });
     const redLace = new THREE.MeshLambertMaterial({ color: '#b3302a', emissive: '#2a0806' });
     const skin = new THREE.MeshLambertMaterial({ color: '#e2b690' });
-    const add = (g, m, x, y, z, rx = 0, ry = 0, rz = 0, parent = samurai) => {
+    const add = (g, m, x, y, z, rx = 0, ry = 0, rz = 0, parent = samuraiProc) => {
       const mesh = new THREE.Mesh(g, m); mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz); parent.add(mesh); return mesh;
     };
-    // hakama (wide trousers) and sandals
-    add(new THREE.CylinderGeometry(0.11, 0.18, 0.34, 12), indigo, 0, 0.17, 0);
-    add(new THREE.BoxGeometry(0.07, 0.025, 0.12), lacquer, 0.06, 0.012, 0.03);
-    add(new THREE.BoxGeometry(0.07, 0.025, 0.12), lacquer, -0.06, 0.012, 0.03);
-    // armour: kusazuri skirt plates
+    // kneeling hakama: folded legs spread on the tatami
+    const legs = add(new THREE.SphereGeometry(1, 20, 12), indigo, 0, 0.065, 0.04); legs.scale.set(0.17, 0.075, 0.2);
+    [-1, 1].forEach(sd => { const k = add(new THREE.SphereGeometry(1, 14, 10), indigo, sd * 0.075, 0.07, 0.17); k.scale.set(0.065, 0.06, 0.07); });
+    // kusazuri skirt plates
     for (let i = 0; i < 7; i++) {
       const a = (i / 7) * Math.PI * 2;
-      add(new THREE.BoxGeometry(0.075, 0.1, 0.012), lacquer, Math.sin(a) * 0.125, 0.31, Math.cos(a) * 0.125, 0.25 * Math.cos(a), a, 0).rotation.order = 'YXZ';
+      const m = add(new THREE.BoxGeometry(0.075, 0.09, 0.012), lacquer, Math.sin(a) * 0.13, 0.31 - D + 0.02, Math.cos(a) * 0.13);
+      m.rotation.order = 'YXZ'; m.rotation.set(0.35, a, 0);
     }
-    add(new THREE.CylinderGeometry(0.118, 0.118, 0.035, 14), redLace, 0, 0.36, 0);          // obi
-    add(new THREE.CylinderGeometry(0.135, 0.112, 0.24, 14), lacquer, 0, 0.49, 0);           // dō (cuirass)
-    [0.43, 0.49, 0.55].forEach(y => add(new THREE.TorusGeometry(0.13 - (y - 0.43) * 0.1, 0.006, 4, 24), redLace, 0, y, 0, Math.PI / 2));
-    // sode (shoulder guards) + arms
+    add(new THREE.CylinderGeometry(0.118, 0.118, 0.035, 14), redLace, 0, 0.36 - D, 0);          // obi
+    add(new THREE.CylinderGeometry(0.135, 0.112, 0.24, 14), lacquer, 0, 0.49 - D, 0);           // dō (cuirass)
+    [0.43, 0.49, 0.55].forEach(y => add(new THREE.TorusGeometry(0.13 - (y - 0.43) * 0.1, 0.006, 4, 24), redLace, 0, y - D, 0, Math.PI / 2));
     [-1, 1].forEach(sd => {
-      add(new THREE.BoxGeometry(0.03, 0.15, 0.13), lacquer, sd * 0.17, 0.53, 0, 0, 0, sd * 0.3);
-      [0.5, 0.55].forEach(y => add(new THREE.BoxGeometry(0.032, 0.008, 0.132), redLace, sd * 0.17 + sd * (0.6 - y) * 0.3, y, 0, 0, 0, sd * 0.3));
+      add(new THREE.BoxGeometry(0.03, 0.15, 0.13), lacquer, sd * 0.17, 0.53 - D, 0, 0, 0, sd * 0.3);
+      [0.5, 0.55].forEach(y => add(new THREE.BoxGeometry(0.032, 0.008, 0.132), redLace, sd * 0.17 + sd * (0.6 - y) * 0.3, y - D, 0, 0, 0, sd * 0.3));
+      // arms resting, hands on the thighs
+      add(new THREE.CylinderGeometry(0.032, 0.028, 0.2, 8), indigo, sd * 0.15, 0.26, 0.07, 0.75, 0, sd * 0.15);
+      add(new THREE.SphereGeometry(0.03, 8, 6), skin, sd * 0.12, 0.15, 0.15);
     });
-    add(new THREE.CylinderGeometry(0.032, 0.03, 0.22, 8), indigo, 0.165, 0.45, 0.02, 0, 0, 0.12);   // left arm, resting
-    add(new THREE.SphereGeometry(0.03, 8, 6), skin, 0.18, 0.34, 0.06);
-    add(new THREE.CylinderGeometry(0.032, 0.03, 0.24, 8), indigo, -0.07, 0.45, 0.09, 0.9, 0, -1.0);   // right arm across to the hilt
-    add(new THREE.SphereGeometry(0.03, 8, 6), skin, 0.06, 0.39, 0.15);
-    // katana at the left hip: scabbard, guard, wrapped hilt
-    const saya = new THREE.CatmullRomCurve3([new V3(0.13, 0.37, 0.06), new V3(0.15, 0.34, -0.14), new V3(0.17, 0.29, -0.36)]);
-    samurai.add(new THREE.Mesh(new THREE.TubeGeometry(saya, 12, 0.014, 6), new THREE.MeshLambertMaterial({ color: '#0f0d10' })));
-    add(new THREE.CylinderGeometry(0.03, 0.03, 0.008, 12), goldMat, 0.128, 0.375, 0.07, Math.PI / 2 - 0.25);
-    add(new THREE.CylinderGeometry(0.014, 0.014, 0.17, 6), new THREE.MeshLambertMaterial({ color: '#d9d0c0' }), 0.115, 0.4, 0.15, Math.PI / 2 - 0.25);
+    // katana laid on the tatami in front of him
+    const saya = new THREE.CatmullRomCurve3([new V3(-0.2, 0.012, 0.3), new V3(0.02, 0.016, 0.31), new V3(0.18, 0.012, 0.3)]);
+    samuraiProc.add(new THREE.Mesh(new THREE.TubeGeometry(saya, 12, 0.013, 6), new THREE.MeshLambertMaterial({ color: '#0f0d10' })));
+    add(new THREE.CylinderGeometry(0.026, 0.026, 0.008, 12), goldMat, 0.185, 0.014, 0.3, 0, 0, Math.PI / 2);
+    add(new THREE.CylinderGeometry(0.013, 0.013, 0.12, 6), new THREE.MeshLambertMaterial({ color: '#d9d0c0' }), 0.25, 0.013, 0.3, 0, 0, Math.PI / 2);
 
-    // head group (turns to follow the cursor)
-    samuraiHead.position.set(0, 0, 0);
-    samurai.add(samuraiHead);
-    add(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 8), skin, 0, 0.625, 0, 0, 0, 0, samuraiHead);       // neck
-    add(new THREE.SphereGeometry(0.075, 18, 14), skin, 0, 0.7, 0, 0, 0, 0, samuraiHead);                   // head
-    add(new THREE.BoxGeometry(0.11, 0.05, 0.03), new THREE.MeshLambertMaterial({ color: '#5a1612' }), 0, 0.66, 0.06, 0, 0, 0, samuraiHead); // menpō mask
-    add(new THREE.SphereGeometry(0.09, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), lacquer, 0, 0.722, -0.004, 0, 0, 0, samuraiHead); // kabuto
-    add(new THREE.CylinderGeometry(0.095, 0.14, 0.075, 18, 1, true, Math.PI * 0.3, Math.PI * 1.4), lacquer, 0, 0.69, -0.005, 0, 0, 0, samuraiHead); // shikoro (neck guard)
-    add(new THREE.BoxGeometry(0.16, 0.012, 0.03), lacquer, 0, 0.73, 0.075, 0, 0, 0, samuraiHead);          // visor
-    // golden kuwagata crest
+    // head (turns to follow the cursor)
+    samuraiProc.add(samuraiHead);
+    add(new THREE.CylinderGeometry(0.035, 0.04, 0.05, 8), skin, 0, 0.625 - D, 0, 0, 0, 0, samuraiHead);
+    add(new THREE.SphereGeometry(0.075, 24, 18), skin, 0, 0.7 - D, 0, 0, 0, 0, samuraiHead);
+    add(new THREE.BoxGeometry(0.11, 0.05, 0.03), new THREE.MeshLambertMaterial({ color: '#5a1612' }), 0, 0.66 - D, 0.06, 0, 0, 0, samuraiHead);
+    add(new THREE.SphereGeometry(0.09, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), lacquer, 0, 0.722 - D, -0.004, 0, 0, 0, samuraiHead);
+    add(new THREE.CylinderGeometry(0.095, 0.14, 0.075, 18, 1, true, Math.PI * 0.3, Math.PI * 1.4), lacquer, 0, 0.69 - D, -0.005, 0, 0, 0, samuraiHead);
+    add(new THREE.BoxGeometry(0.16, 0.012, 0.03), lacquer, 0, 0.73 - D, 0.075, 0, 0, 0, samuraiHead);
     [-1, 1].forEach(sd => {
-      const c = new THREE.CatmullRomCurve3([new V3(0, 0.74, 0.085), new V3(sd * 0.05, 0.8, 0.1), new V3(sd * 0.09, 0.9, 0.09)]);
+      const c = new THREE.CatmullRomCurve3([new V3(0, 0.74 - D, 0.085), new V3(sd * 0.05, 0.8 - D, 0.1), new V3(sd * 0.09, 0.9 - D, 0.09)]);
       samuraiHead.add(new THREE.Mesh(new THREE.TubeGeometry(c, 10, 0.008, 5), goldMat));
+      add(new THREE.SphereGeometry(0.012, 40, 30), eyeMat, sd * 0.027, 0.712 - D, 0.064, 0, 0, 0, samuraiHead);
+      add(new THREE.SphereGeometry(0.0055, 32, 24), new THREE.MeshBasicMaterial({ color: '#0b0604' }), sd * 0.027, 0.712 - D, 0.0745, 0, 0, 0, samuraiHead);
+      add(new THREE.BoxGeometry(0.03, 0.007, 0.008), new THREE.MeshBasicMaterial({ color: '#120b0a' }), sd * 0.028, 0.729 - D, 0.071, 0, 0, sd * 0.35, samuraiHead);
     });
-    add(new THREE.CircleGeometry(0.02, 16), goldMat, 0, 0.75, 0.09, 0, 0, 0, samuraiHead);
-    // glowing eyes with dark pupils
-    [-1, 1].forEach(sd => {
-      add(new THREE.SphereGeometry(0.012, 40, 30), eyeMat, sd * 0.027, 0.712, 0.064, 0, 0, 0, samuraiHead);
-      add(new THREE.SphereGeometry(0.0055, 32, 24), new THREE.MeshBasicMaterial({ color: "#0b0604" }), sd * 0.027, 0.712, 0.0745, 0, 0, 0, samuraiHead);
-    });
-    // stern brows
-    [-1, 1].forEach(sd => add(new THREE.BoxGeometry(0.03, 0.007, 0.008), new THREE.MeshBasicMaterial({ color: '#120b0a' }), sd * 0.028, 0.729, 0.071, 0, 0, sd * 0.35, samuraiHead));
-    // sashimono banner on his back
-    add(new THREE.CylinderGeometry(0.005, 0.005, 0.62, 4), lacquer, 0, 0.78, -0.13);
-    const bannerTex = canvasTex(64, 160, (x, w, h) => {
-      x.fillStyle = '#efe6d4'; x.fillRect(0, 0, w, h);
-      x.fillStyle = '#c8372a'; x.beginPath(); x.arc(w / 2, 52, 20, 0, Math.PI * 2); x.fill();
-      x.fillStyle = '#1c1417'; x.fillRect(0, h - 26, w, 10); x.fillRect(0, 6, w, 5);
-    });
-    bannerGeo = new THREE.PlaneGeometry(0.13, 0.32, 8, 1); bannerGeo.translate(0.065, 0, 0);
-    bannerBase = bannerGeo.attributes.position.array.slice();
-    const banner = add(bannerGeo, new THREE.MeshLambertMaterial({ map: bannerTex, side: THREE.DoubleSide }), 0.005, 0.92, -0.13, 0, Math.PI / 2, 0);
-    banner.rotation.y = Math.PI / 2 + 0.3;
+    add(new THREE.CircleGeometry(0.02, 16), goldMat, 0, 0.75 - D, 0.09, 0, 0, 0, samuraiHead);
   }
-  samurai.scale.setScalar(1.2);
-  samurai.position.set(-0.05, 3.02, 0);
-  samurai.rotation.y = -0.52;            // face the lake (and you)
+  samurai.add(samuraiProc);
+  // a small zabuton cushion under him
+  {
+    const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.03, 0.34), new THREE.MeshLambertMaterial({ color: '#6b1f24' }));
+    cushion.position.y = -0.005; samurai.add(cushion);
+  }
+  // invisible, generous hit area so he's easy to click
+  {
+    const hit = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.42), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.position.y = 0.3; samurai.add(hit);
+  }
+  const SAMURAI_HOME = new V3(-0.66, 0.8, -0.36);     // house-local: on the tatami, in front of the round window
+  samurai.scale.setScalar(0.8);
+  samurai.position.copy(SAMURAI_HOME);
+  samurai.rotation.y = 0.75;                          // facing whoever comes through the door
   house.add(samurai);
 
   // ---- interior room ----
@@ -1140,14 +1142,14 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   // hovering the house / torii (they're clickable)
   let hovered = null;
-  const pickables = [house, torii];
+  const pickables = [house, torii, volcano];
   function pick() {
     const hits = raycaster.intersectObjects(pickables, true);
     for (const h of hits) {
       if (h.point.y < 0) continue;
       let o = h.object;
-      while (o && o !== samurai && o !== house && o !== torii) o = o.parent;
-      return o === samurai ? 'samurai' : o === house ? 'house' : o === torii ? 'torii' : null;
+      while (o && o !== samurai && o !== house && o !== torii && o !== volcano) o = o.parent;
+      return o === samurai ? 'samurai' : o === house ? 'house' : o === torii ? 'torii' : o === volcano ? 'mountain' : null;
     }
     return null;
   }
@@ -1178,8 +1180,10 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     surface: () => pose(new V3(0.1, 0.9, 7.8), new V3(0.4, -1.2, 0), 52, 0.6),
     below: () => pose(new V3(0.15, -1.1, 7.2), new V3(0.3, -2.4, -2), 56, 0.6),
     clouds: () => pose(new V3(0, 16, 12.5), new V3(0.3, 26, -14), 52, 0.8),
-    samuraiFace: () => { const { eye, fwd } = eyeFrame(); return pose(eye.clone().addScaledVector(fwd, 1.1).add(new V3(0, 0.08, 0)), eye.clone(), 34, 0.15); },
-    gallery: () => { const { eye, fwd } = eyeFrame(); return pose(eye.clone().addScaledVector(fwd, 0.03), eye.clone().addScaledVector(fwd, -0.3), 16, 0); }
+    toMountain: () => pose(new V3(-14, 17, -48), new V3(-36, 30, -116), 50, 0.3),   // arc up over the lake
+    ski: () => pose(new V3(-29, 33.5, -97), new V3(-38, 31, -118), 46, 0),
+    samuraiFace: () => { const { eye, fwd } = eyeFrame(); return pose(eye.clone().addScaledVector(fwd, 0.45).add(new V3(0, 0.04, 0)), eye.clone(), 40, 0.05); },
+    gallery: () => { const { eye, fwd } = eyeFrame(); return pose(eye.clone().addScaledVector(fwd, 0.022), eye.clone().addScaledVector(fwd, -0.3), 18, 0); }
   };
   function eyeFrame() {
     samurai.updateMatrixWorld(true);
@@ -1187,7 +1191,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     const fwd = new V3(0, 0, 1).applyQuaternion(samurai.getWorldQuaternion(new THREE.Quaternion())).normalize();
     return { eye, fwd };
   }
-  const ROUTE = { projects: ['surface', 'below', 'projects'], about: ['clouds', 'about'], contact: ['doorOut', 'contact'], gallery: ['samuraiFace', 'gallery'] };
+  const ROUTE = { projects: ['surface', 'below', 'projects'], about: ['clouds', 'about'], contact: ['doorOut', 'contact'], gallery: ['doorOut', 'contact', 'samuraiFace', 'gallery'], ski: ['toMountain', 'ski'] };
 
   let page = initialPage;
   const cam = POSE[page]();
@@ -1195,16 +1199,16 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   const currentPose = () => pose(cam.pos.clone(), cam.target.clone(), cam.fov, cam.par);
 
   function routeNames(from, to) {
-    const names = [];
-    if (from !== 'home') names.push(...ROUTE[from].slice(0, -1).reverse(), 'home');
-    if (to !== 'home') names.push(...ROUTE[to]);
-    return names;
+    const a = ['home', ...(ROUTE[from] || [])], b = ['home', ...(ROUTE[to] || [])];
+    let k = 0;
+    while (k < a.length && k < b.length && a[k] === b[k]) k++;
+    return [...a.slice(k - 1, a.length - 1).reverse(), ...b.slice(k)];
   }
   function travelTime(from, to) {
     if (from === to) return 0;
     if (reduceMotion) return 600;
     const legs = routeNames(from, to).length;
-    return clamp(900 + legs * 430 + (to === 'gallery' || from === 'gallery' ? 700 : 0), 1600, 3600);
+    return clamp(900 + legs * 430 + (to === 'gallery' || from === 'gallery' ? 500 : 0), 1600, 3800);
   }
   function startTravel(from, to, ms) {
     if (to === 'gallery' || from === 'gallery') { samuraiHead.rotation.set(0, 0, 0); }
@@ -1213,7 +1217,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     const tgtCurve = new THREE.CatmullRomCurve3(poses.map(p => p.target), false, 'centripetal');
     page = to;
     return new Promise(resolve => {
-      travel = { poses, posCurve, tgtCurve, t0: performance.now(), ms: Math.max(1, ms), resolve, toGallery: to === 'gallery' };
+      travel = { poses, posCurve, tgtCurve, t0: performance.now(), ms: Math.max(1, ms), resolve, toGallery: to === 'gallery', toSki: to === 'ski' || from === 'ski' };
     });
   }
   function stepCamera(dt, now) {
@@ -1258,6 +1262,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   const tmpC = new THREE.Color();
 
   const lastRay = new THREE.Ray();
+  const _eyeW = new V3();
   let lastRayAt = -1e9;
   const _cp = new V3(), _pp = new V3();
   function updatePetals(dt, t) {
@@ -1372,7 +1377,9 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     const cy = camera.position.y;
     const underK = smooth(0.15, -0.35, cy);
     const depth = clamp(-cy / 9, 0, 1);
-    const night = smooth(6, 34, cy);
+    const skiing = page === 'ski' || (travel && travel.toSki);
+    skiNight = lerp(skiNight, skiing ? 0 : 1, 1 - Math.exp(-dt * 3));
+    const night = smooth(6, 34, cy) * skiNight;
 
     const fogCol = scene.fog.color;
     fogCol.copy(FOG_DUSK).lerp(FOG_NIGHT, night);
@@ -1440,6 +1447,9 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
           }
         } else queueDrop(h.x, h.z, 0.014, st);
         lastHit = h;
+      } else if (page === 'contact') {
+        setRay(x, y);
+        setHovered(pick() === 'samurai' ? 'samurai' : null);
       } else if (page === 'projects') {
         setRay(x, y);
         raycaster.ray.at(6, cursorW);
@@ -1460,11 +1470,16 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     leave() { lastHit = null; hoverPoint = null; mouse.active = false; cursorW.set(0, -100, 0); setHovered(null); },
     click(x, y) {
       if (travel) return;
+      if (page === 'contact') {
+        setRay(x, y);
+        if (pick() === 'samurai') onNavigate('gallery');
+        return;
+      }
       if (page === 'home') {
         const h = waterHit(x, y);
         const what = pick();
-        if (what === 'samurai') { onNavigate('gallery'); return; }
-        if (what === 'house') { onNavigate('contact'); return; }
+        if (what === 'house' || what === 'samurai') { onNavigate('contact'); return; }
+        if (what === 'mountain') { onNavigate('ski'); return; }
         if (what === 'torii') { onNavigate('about'); return; }
         if (h && h.distanceTo(camera.position) < 60) {
           queueDrop(h.x, h.z, 0.03, 1.4);
@@ -1519,22 +1534,25 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       cursorGlow.visible = cursorGlowMat.opacity > 0.01;
       houseGlow.intensity = lerp(houseGlow.intensity, hovered === 'house' ? 14 : 4, 1 - Math.exp(-dt * 6));
       {
-        const still = page === 'gallery' || (travel && travel.toGallery) || page !== 'home';
+        const still = page !== 'contact' || !!travel;
         const ay = still ? 0 : clamp(mouse.sx * 0.7, -0.6, 0.6), ax = still ? 0 : clamp(mouse.sy * 0.25, -0.2, 0.25);
         const kk = 1 - Math.exp(-dt * (still ? 10 : 4));
         samuraiHead.rotation.y = lerp(samuraiHead.rotation.y, ay, kk);
         samuraiHead.rotation.x = lerp(samuraiHead.rotation.x, ax, kk);
-        samurai.position.y = 3.02 + Math.sin(t * 1.6) * 0.002;
-        const pa = bannerGeo.attributes.position.array;
-        for (let i = 0; i < pa.length; i += 3) {
-          const k = bannerBase[i] / 0.13;
-          pa[i + 2] = bannerBase[i + 2] + Math.sin(t * 5 - k * 5) * 0.02 * k;
+        samuraiProc.position.y = Math.sin(t * 1.4) * 0.0025;     // breathing
+        updateHeadRig(dt, t);
+        if (modelEyes.length) {
+          const d = camera.position.distanceTo(modelEyes[0].getWorldPosition(_eyeW));
+          const want = lerp(0.2, 0.9, smooth(0.55, 0.035, d)) + (hovered === 'samurai' ? 0.06 : 0);
+          irisMat.uniforms.uPupil.value = lerp(irisMat.uniforms.uPupil.value, want, 1 - Math.exp(-dt * 7));
+          irisMat.uniforms.uTime.value = t;
+          irisMat.uniforms.uGlow.value = lerp(irisMat.uniforms.uGlow.value, hovered === 'samurai' ? 1 : 0.25 + Math.max(0, Math.sin(t * 0.9)) * 0.3, 1 - Math.exp(-dt * 6));
         }
-        bannerGeo.attributes.position.needsUpdate = true;
         const glint = hovered === 'samurai' ? 1 : 0.55 + Math.max(0, Math.sin(t * 0.9)) * 0.25;
         eyeMat.color.setRGB(1 * glint + 0.2, 0.78 * glint + 0.1, 0.38 * glint);
       }
       toriiRed.emissive.lerp(tmpC.set(hovered === 'torii' ? '#a8261a' : '#3a0d08'), 1 - Math.exp(-dt * 6));
+      if (volcano) volcano.material.emissive.lerp(tmpC.set(hovered === 'mountain' ? '#4a2a48' : '#000000'), 1 - Math.exp(-dt * 6));
       if (under.visible) updateUnderwater(dt, t);
       if (cy > 4) updateSky(dt, t, night);
       else if (night === 0 && skyMat.uniforms.night.value !== 0) updateSky(dt, t, 0);
@@ -1542,6 +1560,223 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       renderer.render(scene, camera);
     }
   };
+
+  /* =========================================================
+     Detailed models (generated with Hunyuan3D) — listed in
+     assets/models/scene-models.json; each replaces its hand-built fallback.
+     { "samurai": { "file": "samurai.glb", "height": 0.62, "rotationY": 0 } }
+     ========================================================= */
+
+  // Untextured meshes get painted by region (normalized model-space position → material colour).
+  const PAINTERS = {
+    samurai(nx, h, nz) {
+      const ax = Math.abs(nx);
+      if (h > 0.875) return 'gold';                                      // kuwagata crest
+      if (h > 0.8) return (ax < 0.08 && nz > 0.4 && h < 0.83) ? 'gold' : 'lacquer';   // kabuto (+ front emblem)
+      if (h > 0.69) {
+        if (ax < 0.13 && nz > 0.05) return h > 0.765 ? 'skin' : 'mask';  // eyes band / menpō
+        return 'lacquer';                                                // fukigaeshi + neck guard
+      }
+      if (h > 0.43) {
+        if (h > 0.64 && ax < 0.1) return 'collar';                       // kimono collar
+        if (ax > 0.36) return (h < 0.5 && ax > 0.4) ? 'cord' : 'lacquer'; // sode, red bottom edge
+        if (ax > 0.2 && h > 0.58 && nz > 0.2) return 'cord';             // red shoulder cords
+        return (h * 34) % 1 < 0.17 ? 'cord' : 'lacquer';                 // laced dō
+      }
+      if (h > 0.385) return ax < 0.42 ? 'obi' : 'lacquer';               // obi belt / forearm guards
+      if (h > 0.255) {
+        if (ax > 0.24 && ax < 0.5 && nz > 0.05 && h < 0.35) return 'skin'; // hands on the thighs
+        if (ax > 0.62) return ax > 0.92 ? 'gold' : 'saya';               // katana
+        return h < 0.285 ? 'cord' : 'lacquer';                           // kusazuri plates
+      }
+      if (ax > 0.62 && h > 0.15) return ax > 0.92 ? 'gold' : 'saya';
+      return 'indigo';                                                   // hakama
+    }
+  };
+  const PAINT = {
+    gold: C('#c9a046'), lacquer: C('#17121a'), skin: C('#d39a72'), mask: C('#7a1a16'), collar: C('#2a3150'),
+    cord: C('#a32a24'), obi: C('#5e5266'), saya: C('#0e0c0e'), indigo: C('#1f2742')
+  };
+  function measureModel(obj) {
+    obj.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(obj.matrixWorld).invert();
+    const box = new THREE.Box3(), v = new V3(), m = new THREE.Matrix4();
+    obj.traverse(o => { if (o.isMesh) { m.multiplyMatrices(inv, o.matrixWorld); const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) box.expandByPoint(v.fromBufferAttribute(p, i).applyMatrix4(m)); } });
+    return { box, center: box.getCenter(new V3()), half: box.getSize(new V3()).multiplyScalar(0.5) };
+  }
+  function paintModel(obj, painter) {
+    obj.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(obj.matrixWorld).invert();
+    const box = new THREE.Box3();
+    const v = new V3(), m = new THREE.Matrix4();
+    obj.traverse(o => { if (o.isMesh) { m.multiplyMatrices(inv, o.matrixWorld); const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) box.expandByPoint(v.fromBufferAttribute(p, i).applyMatrix4(m)); } });
+    const c = box.getCenter(new V3()), half = box.getSize(new V3()).multiplyScalar(0.5);
+    obj.traverse(o => {
+      if (!o.isMesh || o.userData.keepMaterial) return;
+      m.multiplyMatrices(inv, o.matrixWorld);
+      const p = o.geometry.attributes.position, cols = new Float32Array(p.count * 3);
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(m);
+        const col = PAINT[painter((v.x - c.x) / half.x, (v.y - box.min.y) / (half.y * 2), (v.z - c.z) / half.z)];
+        cols[i * 3] = col.r; cols[i * 3 + 1] = col.g; cols[i * 3 + 2] = col.b;
+      }
+      o.geometry.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      o.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.15 });
+    });
+    return { box, center: c, half };
+  }
+
+  // Front-project the generator's reference image onto the mesh (it was built from that exact view),
+  // and blend to the region paint on faces that look away from the front.
+  function projectTexture(obj, frame, proj, onReady) {
+    const [bx0, by0, bx1, by1] = proj.bbox;
+    new THREE.TextureLoader().load('assets/models/' + proj.image, tex => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      const { box } = frame, size = box.getSize(new V3());
+      const inv = new THREE.Matrix4().copy(obj.matrixWorld).invert();
+      const m = new THREE.Matrix4(), nm = new THREE.Matrix3(), v = new V3(), n = new V3();
+      obj.traverse(o => {
+        if (!o.isMesh || o.userData.keepMaterial) return;
+        m.multiplyMatrices(inv, o.matrixWorld); nm.getNormalMatrix(m);
+        const g = o.geometry, p = g.attributes.position, nrm = g.attributes.normal;
+        const uv = new Float32Array(p.count * 2), back = new Float32Array(p.count), head = new Float32Array(p.count);
+        for (let i = 0; i < p.count; i++) {
+          v.fromBufferAttribute(p, i).applyMatrix4(m);
+          const fx = (v.x - box.min.x) / size.x, fy = (box.max.y - v.y) / size.y;
+          uv[i * 2] = bx0 + fx * (bx1 - bx0);
+          uv[i * 2 + 1] = 1 - (by0 + fy * (by1 - by0));
+          const nz = nrm ? n.fromBufferAttribute(nrm, i).applyMatrix3(nm).normalize().z : 1;
+          back[i] = smooth(0.2, -0.3, nz);
+          const h = (v.y - box.min.y) / size.y;                       // head turns fully, chest a little
+          head[i] = 0.25 * smooth(0.45, 0.66, h) + 0.75 * smooth(0.66, 0.72, h);
+        }
+        g.setAttribute('aHead', new THREE.BufferAttribute(head, 1));
+        const uHeadMat = { value: new THREE.Matrix4() };
+        const M = m.clone(), Minv = m.clone().invert();
+        rigMeshes.push({ uHeadMat, M, Minv });
+        g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+        g.setAttribute('aBack', new THREE.BufferAttribute(back, 1));
+        const mat = new THREE.MeshStandardMaterial({ map: tex, vertexColors: true, roughness: 0.55, metalness: 0.12 });
+        mat.onBeforeCompile = sh => {
+          sh.uniforms.uHeadMat = uHeadMat;
+          sh.vertexShader = 'attribute float aBack;\nattribute float aHead;\nuniform mat4 uHeadMat;\nvarying float vBack;\n' + sh.vertexShader
+            .replace('#include <color_vertex>', '#include <color_vertex>\n  vBack = aBack;')
+            .replace('#include <beginnormal_vertex>', 'vec3 objectNormal = normalize( mix( vec3( normal ), mat3( uHeadMat ) * vec3( normal ), aHead ) );')
+            .replace('#include <begin_vertex>', 'vec3 transformed = mix( vec3( position ), ( uHeadMat * vec4( position, 1.0 ) ).xyz, aHead );');
+          sh.fragmentShader = 'varying float vBack;\n' + sh.fragmentShader
+            .replace('#include <map_fragment>', 'vec4 projTex = texture2D( map, vMapUv );\n  diffuseColor.rgb = mix( projTex.rgb, vColor, vBack );')
+            .replace('#include <color_fragment>', '');
+        };
+        o.material = mat;
+      });
+      headRig.pivot.set(frame.center.x, box.min.y + size.y * 0.69, frame.center.z);
+      headRig.obj = obj;
+      onReady && onReady();
+    });
+  }
+  const rigMeshes = [];
+  const headRig = { obj: null, pivot: new V3(), yaw: 0, pitch: 0, lx: 0, ly: 0 };
+  let eyeRig = null;
+  const _rq = new THREE.Matrix4(), _rx = new THREE.Matrix4(), _rt = new THREE.Matrix4(), _rp = new V3(), _ndc = new THREE.Vector2();
+  let blinkT = 3, blinkK = 0;
+  function updateHeadRig(dt, t) {
+    if (!headRig.obj) return;
+    const obj = headRig.obj, piv = headRig.pivot;
+    let yaw = 0, pitch = 0, lx = 0, ly = 0;
+    if ((page === 'contact' || page === 'samuraiFace') && !travel && mouse.active) {   // samuraiFace: debug-only close-up
+      _ndc.set(mouse.x, -mouse.y);
+      raycaster.setFromCamera(_ndc, camera);
+      const pivW = obj.localToWorld(piv.clone());
+      raycaster.ray.at(raycaster.ray.origin.distanceTo(pivW) * 0.9, _rp);
+      const tl = obj.worldToLocal(_rp.clone()).sub(piv);
+      const hz = Math.max(0.05, tl.z), horiz = Math.hypot(tl.x, hz);
+      const ay = Math.atan2(tl.x, hz), ap = Math.atan2(tl.y, horiz);
+      yaw = clamp(ay, -0.7, 0.7); pitch = clamp(-ap, -0.32, 0.32);
+      lx = clamp(ay / 0.9, -1, 1); ly = clamp(ap / 0.5, -1, 1);
+    }
+    const k = 1 - Math.exp(-dt * (travel ? 8 : 3.2));
+    headRig.yaw = lerp(headRig.yaw, yaw, k); headRig.pitch = lerp(headRig.pitch, pitch, k);
+    headRig.lx = lerp(headRig.lx, lx, 1 - Math.exp(-dt * 9)); headRig.ly = lerp(headRig.ly, ly, 1 - Math.exp(-dt * 9));
+    // root-space head transform about the neck pivot
+    _rt.makeTranslation(piv.x, piv.y, piv.z)
+      .multiply(_rq.makeRotationY(headRig.yaw))
+      .multiply(_rx.makeRotationX(headRig.pitch))
+      .multiply(new THREE.Matrix4().makeTranslation(-piv.x, -piv.y, -piv.z));
+    for (const r of rigMeshes) r.uHeadMat.value.copy(r.Minv).multiply(_rt).multiply(r.M);
+    if (eyeRig) { eyeRig.matrix.copy(_rt); eyeRig.matrixWorldNeedsUpdate = true; }
+    // eyes: look at the cursor, blink now and then
+    irisMat.uniforms.uLook.value.set(headRig.lx, headRig.ly);
+    blinkT -= dt;
+    if (blinkT <= 0 && !(travel && travel.toGallery)) { blinkK = 1; blinkT = 2.5 + Math.random() * 4.5; }
+    if (blinkK > 0) blinkK = Math.max(0, blinkK - dt * 4.2);
+    const b = blinkK > 0 ? Math.sin(blinkK * Math.PI) : 0;
+    irisMat.uniforms.uOpen.value = 1 - b * 0.95;
+  }
+
+  // The samurai's eyes: almond-shaped with lids, iris looks at the cursor, blinks (js/eyeShader.js)
+  const irisMat = makeEyeMaterial({ almond: true, lid: '#2a120c' });
+  const modelEyes = [];
+
+  // find the eyes on the face: cast rays from the front at the eye band and put glowing eyes there
+  function addModelEyes(obj, frame) {
+    const { box, center, half } = frame;
+    const rc = new THREE.Raycaster();
+    const meshes = []; obj.traverse(o => { if (o.isMesh && !o.userData.keepMaterial) meshes.push(o); });
+    const eyes = [];
+    eyeRig = new THREE.Group(); eyeRig.matrixAutoUpdate = false; obj.add(eyeRig);
+    for (const sd of [-1, 1]) {
+      const local = new V3(center.x + sd * half.x * 0.083, box.min.y + half.y * 2 * 0.817, box.max.z + 1);
+      const world = obj.localToWorld(local.clone());
+      const dir = new V3(0, 0, -1).transformDirection(obj.matrixWorld);
+      rc.set(world, dir);
+      const hit = rc.intersectObjects(meshes, true)[0];
+      if (!hit) continue;
+      const pLocal = obj.worldToLocal(hit.point.clone());
+      const r = half.y * 2 * 0.0118;
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(r, 64, 48), irisMat);
+      eye.userData.keepMaterial = true;
+      eye.scale.set(1.25, 1, 0.75);                               // wider than tall, flatter: sits in the socket
+      eye.position.copy(pLocal).add(new V3(0, 0, -r * 0.12));
+      eyeRig.add(eye);
+      modelEyes.push(eye);
+      eyes.push({ sd, eye });
+    }
+    return eyes;
+  }
+
+  const slots = { samurai: { parent: samurai, fallback: samuraiProc, height: 0.62 } };
+  (async () => {
+    let list;
+    try { list = await (await fetch('assets/models/scene-models.json', { cache: 'no-cache' })).json(); } catch { return; }
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    for (const [name, cfg] of Object.entries(list || {})) {
+      const slot = slots[name];
+      if (!slot || !cfg || !cfg.file) continue;
+      loader.load('assets/models/' + cfg.file, gltf => {
+        const obj = gltf.scene;
+        const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new V3());
+        obj.scale.setScalar((cfg.height ?? slot.height) / Math.max(size.y, 1e-6));
+        if (cfg.rotationY) obj.rotation.y = cfg.rotationY;
+        box.setFromObject(obj);
+        obj.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+        slot.parent.add(obj);
+        obj.updateMatrixWorld(true);
+        let textured = false;
+        obj.traverse(o => { if (o.isMesh && o.material && o.material.map) textured = true; });
+        const frame = (!textured && PAINTERS[cfg.paint || name]) ? paintModel(obj, PAINTERS[cfg.paint || name]) : null;
+        if (frame && cfg.projection) projectTexture(obj, frame, cfg.projection);
+        if (name === 'samurai') {
+          obj.traverse(o => { if (o.isMesh) { o.castShadow = false; } });
+          const eyes = addModelEyes(obj, frame || measureModel(obj));
+          const right = eyes.find(e => e.sd < 0) || eyes[0];
+          if (right) { samurai.updateMatrixWorld(true); EYE_LOCAL.copy(samurai.worldToLocal(right.eye.getWorldPosition(new V3()))); }
+        }
+        slot.fallback.visible = false;
+      }, undefined, err => console.warn('Model failed, keeping fallback:', name, err));
+    }
+  })();
 
   camera.aspect = W / H; camera.fov = cam.fov; camera.updateProjectionMatrix();
   api.render(0.016, performance.now() / 1000);
