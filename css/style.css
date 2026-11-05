@@ -265,6 +265,8 @@ body:not([data-page="home"]) .home-ui { opacity: 0; transform: translateY(-14px)
 }
 .name .line + .line > span { transition-delay: .62s; }
 body.loaded .name .line > span { transform: none; }
+body.name-ready .name .line { clip-path: none; }
+body.name-ready .name .line > span { transition: none; }
 .role {
   color: var(--ink-dim); font-size: clamp(.9rem, 1.25vw, 1.02rem); line-height: 1.8;
   text-shadow: 0 1px 14px rgba(20, 16, 50, .6);

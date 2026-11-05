@@ -12,5 +12,19 @@
         0.9346
       ]
     }
+  },
+  "sakura": {
+    "file": "sakura.glb",
+    "height": 3.9,
+    "paint": "sakura",
+    "projection": {
+      "image": "sakura-albedo.webp",
+      "bbox": [
+        0.0732,
+        0.0967,
+        0.9277,
+        0.9043
+      ]
+    }
   }
 }

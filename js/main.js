@@ -615,9 +615,9 @@
   let hoverDOM = false, hover3D = false;
   function syncEnso() {
     const on = hoverDOM || hover3D;
+    // only the cursor changes — toggling classes on <body> restyled the whole page and made the title flash
     enso.classList.toggle('on', on);
-    body.classList.toggle('cursor-link', on);
-    body.classList.toggle('pick-3d', hover3D && !hoverDOM);
+    enso.classList.toggle('pick-3d', hover3D && !hoverDOM);
   }
 
   function layoutInk() {
@@ -1173,7 +1173,10 @@
     applyInstant(pageFromHash());
     updateDepth();
     requestAnimationFrame(frame);
-    const reveal = () => body.classList.add('loaded');
+    const reveal = () => {
+      body.classList.add('loaded');
+      setTimeout(() => body.classList.add('name-ready'), 2300);   // drop the reveal mask once the name has slid in
+    };
     const ready3D = load3D();
     Promise.race([Promise.all([texReady, ready3D]), sleep(4000)]).then(() => setTimeout(reveal, 250), reveal);
   }

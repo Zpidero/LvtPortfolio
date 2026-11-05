@@ -73,7 +73,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   const camera = new THREE.PerspectiveCamera(45, W / H, 0.05, 900);
   const SUN_DIR  = new V3(0.36, 0.085, -1).normalize();
-  let volcano = null, skiNight = 1;
+  let volcano = null, skiNight = 1, furin = null;
   const MOON_DIR = new V3(0.04, 0.55, -1).normalize();
 
   /* =========================================================
@@ -295,9 +295,11 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   }
   // sakura (cherry blossom) trees
   const barkMat = new THREE.MeshLambertMaterial({ color: '#2d1c1f' });
-  const blossoms = [];
+  const blossoms = [], treeSpots = [];
+  const treesProc = new THREE.Group(); scene.add(treesProc);        // hand-built trees (fallback for the GLB)
   function sakura(x, y, z, s, seed) {
     const r = mulberry(seed), g = new THREE.Group();
+    treeSpots.push({ x, y, z, s, rot: mulberry(seed * 7 + 3)() * Math.PI * 2 });
     const trunk = [new V3(0, -0.2, 0), new V3(0.12, 0.6, 0.05), new V3(-0.06, 1.2, 0), new V3(0.14, 1.75, -0.05)];
     g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(trunk), 16, 0.13, 7), barkMat));
     const ends = [trunk[3].clone().add(new V3(0, 0.35, 0))];
@@ -312,14 +314,14 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       ends.push(mid, end);
     }
     g.position.set(x, y, z); g.scale.setScalar(s); g.rotation.y = r() * 6;
-    scene.add(g); g.updateMatrixWorld(true);
+    treesProc.add(g); g.updateMatrixWorld(true);
     for (const e of ends) for (let k = 0; k < 7; k++) {
       const p = e.clone().add(new V3((r() - 0.5) * 0.8, (r() - 0.35) * 0.5, (r() - 0.5) * 0.8));
       blossoms.push({ p: g.localToWorld(p), s: (0.2 + r() * 0.26) * s, c: (r() * 5) | 0 });
     }
   }
-  sakura(-12.4, 0.25, -6.6, 1.05, 1);
-  sakura(-9.2, 0.15, -7.4, 0.75, 2);
+  sakura(-13.8, 0.25, -7.4, 1.05, 1);
+  sakura(-10.4, 0.15, -9.0, 0.72, 2);
   sakura(-14.6, 0.3, -8.8, 1.3, 3);
   sakura(14, 0.25, -13.5, 1.0, 4);
   sakura(16.3, 0.2, -12.6, 0.7, 5);
@@ -332,8 +334,9 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       d.scale.set(b.s, b.s * 0.78, b.s); d.updateMatrix();
       im.setMatrixAt(i, d.matrix); im.setColorAt(i, PINKS[b.c]);
     });
-    scene.add(im);
+    treesProc.add(im);
   }
+  const treesModel = new THREE.Group(); scene.add(treesModel);
 
   /* =========================================================
      THE HOUSE — exterior + a real interior
@@ -435,15 +438,12 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     rg.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
     rg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); rg.setIndex(idx); rg.computeVertexNormals();
     house.add(new THREE.Mesh(rg, roofM));
-    const ridgeBeam = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.1, 0.12), wood); ridgeBeam.position.y = 2.5; house.add(ridgeBeam);
 
     const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), new THREE.MeshBasicMaterial({ color: '#ff5a33' }));
     lantern.scale.y = 1.35; lantern.position.set(-1.45, 1.42, 1.15); house.add(lantern);
     const ll = new THREE.PointLight('#ff7a45', 2.2, 5, 2); ll.position.copy(lantern.position); house.add(ll);
     const glow = houseGlow; glow.position.set(0, 1.0, 2.1); house.add(glow);
 
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.06, 0.55), wood); pier.position.set(-2.4, 0.42, 0.6); house.add(pier);
-    [-3.3, -2.5, -1.7].forEach(px => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6), wood); m.position.set(px, 0.0, 0.6); house.add(m); });
   }
 
   // ---- upgrades: second roof tier, eave trim, lanterns, beams, stone lantern ----
@@ -517,20 +517,129 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       const str = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.14, 4), capMat); str.position.set(px, 1.66, 1.15); house.add(str);
     });
 
-    // stone lantern (ishi-dōrō) at the end of the pier
-    const stone = new THREE.MeshLambertMaterial({ color: '#6d6a72', flatShading: true });
-    const tr = new THREE.Group();
-    const parts = [
-      [new THREE.CylinderGeometry(0.16, 0.2, 0.08, 6), 0.04, stone],
-      [new THREE.CylinderGeometry(0.06, 0.07, 0.36, 8), 0.26, stone],
-      [new THREE.CylinderGeometry(0.14, 0.1, 0.06, 6), 0.47, stone],
-      [new THREE.BoxGeometry(0.16, 0.14, 0.16), 0.57, new THREE.MeshBasicMaterial({ color: '#ffd08a' })],
-      [new THREE.ConeGeometry(0.24, 0.14, 6), 0.71, stone],
-      [new THREE.SphereGeometry(0.045, 8, 6), 0.8, stone]
-    ];
-    parts.forEach(([g, py, m]) => { const mesh = new THREE.Mesh(g, m); mesh.position.y = py; tr.add(mesh); });
-    tr.position.set(-3.35, 0.45, 0.6); tr.scale.setScalar(0.8);
-    house.add(tr);
+  }
+
+  // ---- detail pass: tiles, ridges, rafters, brackets, wainscot, bracing, blinds, wind chime ----
+  {
+    const tileDark = new THREE.MeshLambertMaterial({ color: '#2a2430' });
+    const tileEnd = new THREE.MeshLambertMaterial({ color: '#3a3342' });
+    const raft = new THREE.MeshLambertMaterial({ color: '#3a2620' });
+    const dummyH = new THREE.Object3D();
+    const roofY = (ku, kv, eaveY, ridgeY, upAmt) => eaveY + upAmt * Math.pow(Math.abs(ku * 2 - 1), 3) * (1 - kv) + (ridgeY - eaveY) * Math.pow(kv, 1.7);
+
+    // round tile ends (nokigawara) + rafter tails (taruki) all along the main eave
+    const MB = [[-1.65, 1.2], [1.65, 1.2], [1.65, -1.2], [-1.65, -1.2]];
+    const capPts = [], raftPts = [];
+    for (let f = 0; f < 4; f++) {
+      const b0 = MB[f], b1 = MB[(f + 1) % 4];
+      const len = Math.hypot(b1[0] - b0[0], b1[1] - b0[1]), n = Math.round(len / 0.105);
+      const out = Math.atan2(b1[0] - b0[0], b1[1] - b0[1]) - Math.PI / 2;      // outward facing yaw
+      for (let i = 1; i < n; i++) {
+        const ku = i / n, x = lerp(b0[0], b1[0], ku), z = lerp(b0[1], b1[1], ku);
+        const y = roofY(ku, 0, 1.7, 2.45, 0.2);
+        capPts.push([x, y, z, out]);
+        if (i % 2 === 0) raftPts.push([x, y - 0.075, z, out]);
+      }
+    }
+    const caps = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045, 0.045, 0.05, 12).rotateX(Math.PI / 2), tileEnd, capPts.length);
+    capPts.forEach(([x, y, z, a], i) => { dummyH.position.set(x, y + 0.01, z); dummyH.rotation.set(0, a, 0); dummyH.translateZ(0.02); dummyH.updateMatrix(); caps.setMatrixAt(i, dummyH.matrix); });
+    house.add(caps);
+    const rafters = new THREE.InstancedMesh(new THREE.BoxGeometry(0.035, 0.035, 0.42), raft, raftPts.length);
+    raftPts.forEach(([x, y, z, a], i) => { dummyH.position.set(x, y, z); dummyH.rotation.set(0, a, 0); dummyH.translateZ(-0.16); dummyH.rotateX(-0.12); dummyH.updateMatrix(); rafters.setMatrixAt(i, dummyH.matrix); });
+    house.add(rafters);
+
+    // hip ridges with upturned end tiles (onigawara), on both roofs
+    function hips(base, top, eaveY, ridgeY, upAmt, r) {
+      for (let f = 0; f < 4; f++) {
+        const pts = [];
+        for (let k = 0; k <= 10; k++) {
+          const kv = k / 10;
+          pts.push(new V3(lerp(base[f][0], top[f][0], kv), roofY(0, kv, eaveY, ridgeY, upAmt) + r * 0.7, lerp(base[f][1], top[f][1], kv)));
+        }
+        house.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, r, 6), tileDark));
+        const oni = new THREE.Mesh(new THREE.BoxGeometry(r * 3, r * 4.2, r * 1.6), tileDark);
+        oni.position.copy(pts[0]).add(new V3(0, r * 1.4, 0));
+        oni.rotation.y = Math.atan2(base[f][0], base[f][1]); oni.rotation.x = 0; oni.rotation.z = 0;
+        house.add(oni);
+        const kamon = new THREE.Mesh(new THREE.CircleGeometry(r * 0.8, 16), goldMat);
+        kamon.position.copy(oni.position); kamon.rotation.y = oni.rotation.y; kamon.translateZ(r * 0.82);
+        house.add(kamon);
+      }
+    }
+    hips(MB, [[-0.75, 0.22], [0.75, 0.22], [0.75, -0.22], [-0.75, -0.22]], 1.7, 2.45, 0.2, 0.035);
+    hips([[-0.98, 0.64], [0.98, 0.64], [0.98, -0.64], [-0.98, -0.64]], [[-0.36, 0.07], [0.36, 0.07], [0.36, -0.07], [-0.36, -0.07]], 2.56, 2.98, 0.13, 0.025);
+
+    // heavier main ridge with end tiles
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.1, 0.17), tileDark); ridge.position.y = 2.5; house.add(ridge);
+    [-1, 1].forEach(sd => {
+      const end = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.22), tileDark); end.position.set(sd * 0.87, 2.56, 0); house.add(end);
+    });
+
+    // bracket blocks (masugumi) on top of the corner pillars, holding up the eaves
+    [[-1, -0.7], [1, -0.7], [-1, 0.7], [1, 0.7]].forEach(([px, pz]) => {
+      [[0.13, 0.05, 1.745], [0.2, 0.04, 1.79], [0.09, 0.04, 1.83]].forEach(([w, h, y]) => {
+        const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), raft); b.position.set(px, y, pz); house.add(b);
+      });
+    });
+
+    // dark wooden wainscot (koshiita) under the shoji on the sides and back
+    const plankTex = canvasTex(256, 64, (x, w, h) => {
+      x.fillStyle = '#3b2721'; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < w; i += 21) { x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(i, 0, 2, h); x.fillStyle = 'rgba(255,220,180,.05)'; x.fillRect(i + 3, 0, 6, h); }
+    });
+    const koshi = new THREE.MeshLambertMaterial({ map: plankTex });
+    [[0, -0.712, 2.0, 0], [-1.012, 0, 1.4, Math.PI / 2], [1.012, 0, 1.4, Math.PI / 2]].forEach(([x, z, w, ry]) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.26, 0.02), koshi); m.position.set(x, 0.9, z); m.rotation.y = ry; house.add(m);
+    });
+
+    // plank deck (engawa) instead of a plain board
+    const deckTex = canvasTex(256, 256, (x, w, h) => {
+      x.fillStyle = '#4a3328'; x.fillRect(0, 0, w, h);
+      for (let j = 0; j < h; j += 16) { x.fillStyle = 'rgba(0,0,0,.45)'; x.fillRect(0, j, w, 2); x.fillStyle = `rgba(255,210,170,${0.03 + Math.random() * 0.04})`; x.fillRect(0, j + 3, w, 9); }
+    });
+    deckTex.wrapS = deckTex.wrapT = THREE.RepeatWrapping; deckTex.repeat.set(1, 1.4);
+    house.children.forEach(o => { if (o.isMesh && o.geometry.type === 'BoxGeometry' && o.geometry.parameters.width === 2.6 && o.geometry.parameters.depth === 2.0) o.material = new THREE.MeshLambertMaterial({ map: deckTex }); });
+
+    // stilts: horizontal ties + cross bracing under the deck
+    const tie = (x0, z0, x1, z1, y) => {
+      const len = Math.hypot(x1 - x0, z1 - z0), m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.05, 0.05), wood);
+      m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); house.add(m);
+    };
+    [0.45, -1.2, -3.5].forEach(y => { tie(-1.1, 0.8, 1.1, 0.8, y); tie(-1.1, -0.8, 1.1, -0.8, y); tie(-1.1, -0.8, -1.1, 0.8, y); tie(1.1, -0.8, 1.1, 0.8, y); });
+    const brace = (a, b) => {
+      const d = b.clone().sub(a), m = new THREE.Mesh(new THREE.BoxGeometry(0.04, d.length(), 0.04), wood);
+      m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new V3(0, 1, 0), d.normalize()); house.add(m);
+    };
+    [0.8, -0.8].forEach(zz => {
+      brace(new V3(-1.1, 0.45, zz), new V3(0, -1.2, zz)); brace(new V3(1.1, 0.45, zz), new V3(0, -1.2, zz));
+      brace(new V3(-1.1, -1.2, zz), new V3(0, -3.5, zz)); brace(new V3(1.1, -1.2, zz), new V3(0, -3.5, zz));
+    });
+    [-1.1, 1.1].forEach(xx => { brace(new V3(xx, 0.45, -0.8), new V3(xx, -1.2, 0.8)); brace(new V3(xx, -1.2, -0.8), new V3(xx, -3.5, 0.8)); });
+
+    // rolled bamboo blind (sudare), half down, on the side wall
+    const sudareTex = canvasTex(128, 128, (x, w, h) => {
+      x.clearRect(0, 0, w, h);
+      for (let j = 0; j < h; j += 4) { x.fillStyle = j % 8 ? 'rgba(196,160,96,.92)' : 'rgba(168,128,70,.92)'; x.fillRect(0, j, w, 3); }
+      x.fillStyle = 'rgba(90,40,24,.9)'; [24, 104].forEach(c => x.fillRect(c, 0, 3, h));
+    });
+    const sudare = new THREE.MeshLambertMaterial({ map: sudareTex, transparent: true, side: THREE.DoubleSide, alphaTest: 0.1 });
+    [[-1.08, 0, 1.25, Math.PI / 2]].forEach(([x, z, w, ry]) => {      // side only: the back wall has the round window
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.48), sudare); m.position.set(x, 1.45, z); m.rotation.y = ry; house.add(m);
+      const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, w, 10).rotateZ(Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#b08a50' }));
+      roll.position.set(x, 1.68, z); roll.rotation.y = ry; house.add(roll);
+    });
+
+    // glass wind chime (fūrin) under the front eave, swaying in the breeze
+    const chainMat = new THREE.MeshLambertMaterial({ color: '#6b4a2e', emissive: '#1a0f06' });
+    furin = new THREE.Group();
+    const bell = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 10, 0, Math.PI * 2, 0, Math.PI / 1.7), new THREE.MeshLambertMaterial({ color: '#cfe8f0', emissive: '#4a6a78', transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+    bell.position.y = -0.1;
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.22, 4), chainMat); cord.position.y = -0.17;
+    const tanzaku = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 0.13), new THREE.MeshLambertMaterial({ color: '#d8402f', side: THREE.DoubleSide }));
+    tanzaku.position.y = -0.32;
+    furin.add(bell, cord, tanzaku);
+    furin.position.set(0.72, 1.74, 1.08);
+    house.add(furin);
   }
 
   /* ---------- the samurai, kneeling in seiza inside the house by the round window
@@ -750,16 +859,16 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     float hgt(vec2 uv){ return texture2D(tRipple, uv).r; }
     vec2 rippleN = vec2(0.0);
     vec2 waveNormal(vec2 p){
-      vec2 n2 = vec2(cos(p.x * 1.3 + time * 1.1), sin(p.y * 1.7 - time * 0.9)) * 0.010;
-      n2 += vec2(sin(p.x * 2.9 - p.y * 1.3 + time * 1.7), cos(p.y * 3.1 + p.x * 0.7 + time * 1.3)) * 0.006;
-      n2 += vec2(sin(p.y * 0.6 + time * 0.4), cos(p.x * 0.5 - time * 0.5)) * 0.008;
+      vec2 n2 = vec2(cos(p.x * 1.3 + time * 0.8), sin(p.y * 1.7 - time * 0.65)) * 0.0055;
+      n2 += vec2(sin(p.x * 2.9 - p.y * 1.3 + time * 1.2), cos(p.y * 3.1 + p.x * 0.7 + time * 0.95)) * 0.003;
+      n2 += vec2(sin(p.y * 0.6 + time * 0.3), cos(p.x * 0.5 - time * 0.35)) * 0.0045;
       vec2 ruv = vec2((p.x - region.x) / region.z, 1.0 - (p.y - region.y) / region.z);
       if (ruv.x > 0.0 && ruv.x < 1.0 && ruv.y > 0.0 && ruv.y < 1.0) {
         float t = region.w;
         float dx = hgt(ruv - vec2(t, 0.0)) - hgt(ruv + vec2(t, 0.0));
         float dz = hgt(ruv + vec2(0.0, t)) - hgt(ruv - vec2(0.0, t));
         vec2 e = min(ruv, 1.0 - ruv);
-        rippleN = vec2(dx, dz) * 1.6 * smoothstep(0.0, 0.1, min(e.x, e.y));
+        rippleN = vec2(dx, dz) * 1.2 * smoothstep(0.0, 0.1, min(e.x, e.y));
         n2 += rippleN;
       }
       return n2;
@@ -795,7 +904,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
           vec3 N = normalize(vec3(n2.x, 1.0, n2.y));
           vec3 V = normalize(cameraPosition - vWorld);
           float dist = length(cameraPosition - vWorld);
-          vec4 uv = vUv; uv.xy += N.xz * 0.55 * uv.w;
+          vec4 uv = vUv; uv.xy += N.xz * 0.4 * uv.w;
           vec3 refl = texture2DProj(tDiffuse, uv).rgb * color;
           float fres = 0.3 + 0.7 * pow(1.0 - max(dot(N, V), 0.0), 3.0);
           vec3 col = mix(deepColor, refl, clamp(fres, 0.0, 1.0));
@@ -1438,7 +1547,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         setHovered(pick());
         if (!h || h.distanceTo(camera.position) > 60) { lastHit = null; hoverPoint = null; return; }
         hoverPoint = h;
-        const st = clamp(0.1 + speed * 0.012, 0.1, 0.5);
+        const st = clamp(0.07 + speed * 0.008, 0.07, 0.32);
         if (lastHit) {
           const d = lastHit.distanceTo(h), n = Math.min(10, Math.max(1, Math.ceil(d / 0.18)));
           for (let i = 1; i <= n; i++) {
@@ -1516,7 +1625,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       // lake ripples (only simulated while you can see the surface)
       const cy = camera.position.y;
       if (cy > -6 && cy < 30) {
-        if (!reduceMotion && cy > 0 && Math.random() < dt * 0.7) queueDrop(rand(-10, 12), rand(-14, 6), 0.01, 0.2);
+        if (!reduceMotion && cy > 0 && Math.random() < dt * 0.35) queueDrop(rand(-10, 12), rand(-14, 6), 0.01, 0.14);
         while (dropQueue.length) { const [u, v, r, st] = dropQueue.shift(); simDrop(u, v, r, st); }
         simTick += dt * 60;
         let steps = 0;
@@ -1540,6 +1649,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         samuraiHead.rotation.y = lerp(samuraiHead.rotation.y, ay, kk);
         samuraiHead.rotation.x = lerp(samuraiHead.rotation.x, ax, kk);
         samuraiProc.position.y = Math.sin(t * 1.4) * 0.0025;     // breathing
+        if (furin) { furin.rotation.z = Math.sin(t * 1.7) * 0.12 + Math.sin(t * 4.3) * 0.03; furin.rotation.x = Math.sin(t * 1.3 + 1) * 0.08; }
         updateHeadRig(dt, t);
         if (modelEyes.length) {
           const d = camera.position.distanceTo(modelEyes[0].getWorldPosition(_eyeW));
@@ -1569,6 +1679,11 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   // Untextured meshes get painted by region (normalized model-space position → material colour).
   const PAINTERS = {
+    sakura(nx, h, nz) {
+      const r = Math.hypot(nx, nz);
+      if (h < 0.4 && r < 0.3) return 'bark';                         // trunk + root flares
+      return (Math.sin(nx * 23.0 + h * 17.0) * Math.cos(nz * 19.0 - h * 11.0) > 0.25) ? 'blossomDeep' : 'blossom';
+    },
     samurai(nx, h, nz) {
       const ax = Math.abs(nx);
       if (h > 0.875) return 'gold';                                      // kuwagata crest
@@ -1595,7 +1710,8 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   };
   const PAINT = {
     gold: C('#c9a046'), lacquer: C('#17121a'), skin: C('#d39a72'), mask: C('#7a1a16'), collar: C('#2a3150'),
-    cord: C('#a32a24'), obi: C('#5e5266'), saya: C('#0e0c0e'), indigo: C('#1f2742')
+    cord: C('#a32a24'), obi: C('#5e5266'), saya: C('#0e0c0e'), indigo: C('#1f2742'),
+    bark: C('#4a2a26'), blossom: C('#e990b4'), blossomDeep: C('#c4628c')
   };
   function measureModel(obj) {
     obj.updateMatrixWorld(true);
@@ -1628,7 +1744,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   // Front-project the generator's reference image onto the mesh (it was built from that exact view),
   // and blend to the region paint on faces that look away from the front.
-  function projectTexture(obj, frame, proj, onReady) {
+  function projectTexture(obj, frame, proj, onReady, rig = true) {
     const [bx0, by0, bx1, by1] = proj.bbox;
     new THREE.TextureLoader().load('assets/models/' + proj.image, tex => {
       tex.colorSpace = THREE.SRGBColorSpace;
@@ -1654,7 +1770,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         g.setAttribute('aHead', new THREE.BufferAttribute(head, 1));
         const uHeadMat = { value: new THREE.Matrix4() };
         const M = m.clone(), Minv = m.clone().invert();
-        rigMeshes.push({ uHeadMat, M, Minv });
+        if (rig) rigMeshes.push({ uHeadMat, M, Minv });
         g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
         g.setAttribute('aBack', new THREE.BufferAttribute(back, 1));
         const mat = new THREE.MeshStandardMaterial({ map: tex, vertexColors: true, roughness: 0.55, metalness: 0.12 });
@@ -1670,8 +1786,10 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         };
         o.material = mat;
       });
-      headRig.pivot.set(frame.center.x, box.min.y + size.y * 0.69, frame.center.z);
-      headRig.obj = obj;
+      if (rig) {
+        headRig.pivot.set(frame.center.x, box.min.y + size.y * 0.69, frame.center.z);
+        headRig.obj = obj;
+      }
       onReady && onReady();
     });
   }
@@ -1746,12 +1864,47 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
   }
 
   const slots = { samurai: { parent: samurai, fallback: samuraiProc, height: 0.62 } };
+  function placeTrees(gltfScene, cfg) {
+    const box = new THREE.Box3().setFromObject(gltfScene), size = box.getSize(new V3());
+    const unit = (cfg.height ?? 3.6) / Math.max(size.y, 1e-6);
+    gltfScene.traverse(o => {
+      if (!o.isMesh) return;
+      const m = o.material;
+      m.side = THREE.DoubleSide; m.metalness = 0; m.roughness = 0.85;
+      if (m.map) {                      // petals catch the dusk light: faintly self-lit by their own colour
+        m.map.anisotropy = 4;
+        m.emissive = new THREE.Color('#ffffff'); m.emissiveMap = m.map; m.emissiveIntensity = 0.42;
+      } else if (m.emissive) m.emissive.set('#3a1626');
+    });
+    treeSpots.forEach((sp, i) => {
+      const t = i === 0 ? gltfScene : gltfScene.clone(true);
+      const k = unit * sp.s * (0.9 + (i % 3) * 0.08);
+      t.scale.setScalar(k);
+      t.position.set(sp.x - (box.min.x + box.max.x) / 2 * k, sp.y - 0.25 - box.min.y * k, sp.z - (box.min.z + box.max.z) / 2 * k);
+      const pivot = new THREE.Group(); pivot.position.set(sp.x, 0, sp.z); pivot.rotation.y = sp.rot;
+      t.position.x -= sp.x; t.position.z -= sp.z; pivot.add(t);
+      treesModel.add(pivot);
+    });
+    treesProc.visible = false;
+  }
   (async () => {
     let list;
     try { list = await (await fetch('assets/models/scene-models.json', { cache: 'no-cache' })).json(); } catch { return; }
     const loader = new GLTFLoader();
     loader.setMeshoptDecoder(MeshoptDecoder);
     for (const [name, cfg] of Object.entries(list || {})) {
+      if (name === 'sakura' && cfg && cfg.file) {
+        loader.load('assets/models/' + cfg.file, g => {
+          const obj = g.scene;
+          let textured = false;
+          obj.traverse(o => { if (o.isMesh && o.material && o.material.map) textured = true; });
+          if (textured || !PAINTERS.sakura) { placeTrees(obj, cfg); return; }
+          const frame = paintModel(obj, PAINTERS.sakura);
+          if (cfg.projection) projectTexture(obj, frame, cfg.projection, () => placeTrees(obj, cfg), false);
+          else placeTrees(obj, cfg);
+        }, undefined, err => console.warn('Tree model failed, keeping the hand-built trees:', err));
+        continue;
+      }
       const slot = slots[name];
       if (!slot || !cfg || !cfg.file) continue;
       loader.load('assets/models/' + cfg.file, gltf => {

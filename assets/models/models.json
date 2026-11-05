@@ -14,6 +14,21 @@
       "created": "2026-11-04 21:14",
       "size_kb": 252.9,
       "compression": "meshopt"
+    },
+    {
+      "name": "sakura",
+      "file": "sakura.glb",
+      "url": "assets/models/sakura.glb",
+      "description": "A single Japanese cherry blossom tree (sakura), whole tree, isolated, no ground and no grass. Thick twisted dark brown trunk splitting into several strong branches, a very wide, dense, rounded umbrella-shaped canopy of deep saturated magenta-pink blossom clumps, solid and full, with a few drooping branches at the edges. Stylized 3D game asset, clean silhouette.",
+      "kind": "object",
+      "style": "stylized",
+      "textured": false,
+      "rigged": false,
+      "animations": 0,
+      "job_id": "20261106-001017-f35b77",
+      "created": "2026-11-06 00:11",
+      "size_kb": 144.0,
+      "compression": "meshopt"
     }
   ]
 }
