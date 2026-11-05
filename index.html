@@ -10,8 +10,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
+  <meta name="author" content="Lluc Vivet Torras" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="canonical" href="https://lvtportfolio.onrender.com/" />
+
+  <!-- link previews (LinkedIn, X, WhatsApp, Discord…) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Lluc Vivet Torras — Developer" />
+  <meta property="og:description" content="Computer Science student at Universitat de Lleida. A portfolio you can explore: a lake at dusk, an underwater project gallery, a samurai's hidden eye and a ski run." />
+  <meta property="og:url" content="https://lvtportfolio.onrender.com/" />
+  <meta property="og:image" content="https://lvtportfolio.onrender.com/assets/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- 3D engine: import map first, then preload the modules so they download while the page loads -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/objects/Reflector.js" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js" crossorigin />
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin />
+  <link rel="modulepreload" href="js/scene3d.js" />
+  <link rel="modulepreload" href="js/eyeShader.js" />
 </head>
 <body data-page="home">
+
+  <noscript>
+    <div class="noscript">This portfolio is an interactive 3D scene and needs JavaScript.
+      Meanwhile: <a href="mailto:lluc@vivet.cat">lluc@vivet.cat</a> · <a href="https://github.com/Zpidero">GitHub</a> · <a href="https://linkedin.com/in/lluc-vivet-torras">LinkedIn</a></div>
+  </noscript>
 
   <!-- Intro veil -->
   <div id="veil" aria-hidden="true"><span>湖</span></div>
@@ -432,7 +467,8 @@
       <p class="ski-text">Race down the volcano. Dodge the pines and rocks, ride through the <b>torii</b> for +100, grab gold <b>koban</b> for +25. It only gets faster.</p>
       <ul class="ski-keys">
         <li><kbd>Mouse</kbd> / <kbd>←</kbd><kbd>→</kbd> steer</li>
-        <li><kbd>Hold click</kbd> / <kbd>Space</kbd> tuck — faster, ×1.5 points</li>
+        <li class="ski-fine"><kbd>Hold click</kbd> / <kbd>Space</kbd> tuck — faster, ×1.5 points</li>
+        <li class="ski-touch"><kbd>Drag</kbd> left / right to steer</li>
       </ul>
       <button class="btn ski-go" id="skiGo">Start the run ⏎</button>
       <a href="#home" class="ski-exit" data-route="home">← back to the lake</a>
@@ -449,14 +485,6 @@
 
   <div class="iris-ring" aria-hidden="true"></div>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
   <script src="js/main.js"></script>
 </body>
 </html>

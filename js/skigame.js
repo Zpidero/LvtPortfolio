@@ -287,7 +287,11 @@ export function createSkiGame({ container, reduceMotion = false }) {
     if (performance.now() - S.keys < 600) return;                 // keyboard has priority for a moment
     S.targetX = clamp(((e.clientX / innerWidth) * 2 - 1) * HALF * 1.15, -HALF, HALF);
   }
-  function onPointerDown(e) { if (running && S.mode === 'play' && !e.target.closest('a, button')) S.tuck = true; }
+  function onPointerDown(e) {
+    if (!running || S.mode !== 'play' || e.target.closest('a, button')) return;
+    if (e.pointerType === 'mouse') S.tuck = true;                 // on touch the finger steers, so no tuck
+    else onPointerMove(e);
+  }
   function onPointerUp() { S.tuck = false; }
   ui.go.addEventListener('click', startRun);
   ui.retry.addEventListener('click', startRun);

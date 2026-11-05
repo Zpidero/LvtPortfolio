@@ -50,6 +50,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--sakura); outlin
 
 .no-anim, .no-anim * { transition: none !important; }
 
+/* ---------- No JavaScript ---------- */
+.noscript {
+  position: fixed; inset: auto 16px 16px 16px; z-index: 200; padding: 14px 18px; border-radius: 12px;
+  background: rgba(11, 14, 34, .9); color: var(--ink); font-size: .9rem; text-align: center;
+}
+.noscript a { color: var(--sakura); border-bottom: 1px solid currentColor; }
+
 /* ---------- Intro veil ---------- */
 #veil {
   position: fixed; inset: 0; z-index: 90;
@@ -876,6 +883,11 @@ kbd {
 }
 .ski-exit:hover { color: var(--ink); }
 .ski.ski-playing .ski-panel { display: none; }
+.ski-touch { display: none; }
+@media not all and (hover: hover) and (pointer: fine) {
+  .ski-fine { display: none; }
+  .ski-touch { display: list-item; }
+}
 @media (max-width: 560px) {
   .ski-hud { gap: 14px; padding: 8px 16px; }
   .ski-hud b { font-size: 1.1rem; }

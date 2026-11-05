@@ -748,7 +748,7 @@
     active.add(p);
     markPage(p);
     state.page = p;
-    if (p === 'contact') layoutWin();
+    if (p === 'contact' && use2D) layoutWin();
     void body.offsetWidth;
     requestAnimationFrame(() => requestAnimationFrame(() => body.classList.remove('no-anim')));
   }
@@ -1125,18 +1125,29 @@
     root.style.setProperty('--h', H + 'px');
   }
 
+  // The 2D lake/underwater/window are only a fallback: build them only when 3D isn't available.
+  let use2D = !(() => {
+    try {
+      const gl = document.createElement('canvas').getContext('webgl2');
+      if (gl) gl.getExtension('WEBGL_lose_context')?.loseContext();
+      return !!gl;
+    } catch { return false; }
+  })();
   function layoutAll() {
     setViewport();
-    const p = layoutLake();
-    layoutPetals();
-    layoutDeep();
-    layoutFx();
-    setZoomOrigin();
+    let p = null;
+    if (use2D) {
+      p = layoutLake();
+      layoutPetals();
+      layoutDeep();
+      layoutFx();
+      setZoomOrigin();
+    }
     layoutInk();
     if (lake3d) lake3d.resize(W, H);
     if (gallery3d) gallery3d.resize();
     if (skiGame) skiGame.resize();
-    if (state.page === 'contact') layoutWin();
+    if (use2D && state.page === 'contact') layoutWin();
     return p;
   }
 
@@ -1150,13 +1161,16 @@
   async function load3D() {
     try {
       let mod;
+      performance.mark('3d-import-start');
       try { mod = await import('./scene3d.js'); }
       catch (e) { await sleep(800); mod = await import('./scene3d.js?retry=1'); }   // flaky CDN: one retry
+      performance.mark('3d-import-end');
       lake3d = mod.createLake3D({
         container: $('#stage'), reduceMotion, initialPage: state.page || pageFromHash(),
         onNavigate: p => navigate(p),
         onHover: on => { hover3D = on; syncEnso(); }
       });
+      performance.mark('3d-created');
       body.classList.add('three-on');
       if (state.page === 'gallery') loadGallery().then(ensureGallery3D);
       if (/[?&]debug\b/.test(location.search)) window.__lake3d = lake3d;   // test hook (only with ?debug)
@@ -1164,12 +1178,16 @@
     } catch (e) {
       console.warn('3D lake unavailable, using the 2D one:', e);
       lake3d = null;
+      if (!use2D) { use2D = true; await layoutAll(); if (state.page === 'contact') layoutWin(); }
     }
   }
 
   function init() {
     makeStars();
+    performance.mark('layout-start');
     const texReady = layoutAll();
+    performance.mark('layout-end');
+    texReady && texReady.then(() => performance.mark('2d-texture-ready'));
     applyInstant(pageFromHash());
     updateDepth();
     requestAnimationFrame(frame);
