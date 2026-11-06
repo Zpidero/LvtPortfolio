@@ -1,6 +1,7 @@
 # lvt.dev — Personal Portfolio
 
 > Portfolio website for **Lluc Vivet Torras** — Computer Engineering Student at Universitat de Lleida.
+> An explorable 3D Japanese lake world built with Three.js.
 
 Live at: https://zpidero.github.io/LvtPortfolio/ (GitHub Pages, from the `gh-pages` branch)
 
@@ -79,20 +80,24 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Built with
 
+- [Three.js](https://threejs.org) 0.160 — loaded from jsDelivr through an import map (no bundler)
+- [Hunyuan3D 2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1) — generated samurai and sakura models (GLB, meshopt-compressed)
 - [Shippori Mincho](https://fonts.google.com/specimen/Shippori+Mincho), [Zen Kaku Gothic New](https://fonts.google.com/specimen/Zen+Kaku+Gothic+New) + [Space Mono](https://fonts.google.com/specimen/Space+Mono) — Google Fonts
-- Deployed on [Render](https://render.com)
+- Hosted on [GitHub Pages](https://pages.github.com)
 
 ---
 
 ## CI/CD Pipeline
 
-This project uses two GitHub Actions workflows for automated validation and deployment.
+Two GitHub Actions workflows validate and deploy the site.
 
 ### CI — Continuous Integration (`ci.yml`)
-Triggered on every `push` or `pull request` to `main`. It spins up the static site with `serve` and runs a `curl` health check to confirm the site responds correctly.
+Runs on every `push` or `pull request` to `main`: it serves the static site with `serve` and runs a `curl` health check.
 
-### CD — Continuous Deployment (`cd.yml`)
-Triggered automatically after the CI workflow passes. It uses a **Render Deploy Hook** — a private URL stored as a GitHub secret — to trigger a new deploy on [lvtportfolio.onrender.com](https://lvtportfolio.onrender.com). Deploys only happen on `main` and only if CI succeeds.
+### CD — Deploy to GitHub Pages (`pages.yml`)
+Runs after CI succeeds on `main` and publishes that exact commit to the `gh-pages` branch, which GitHub Pages serves at [zpidero.github.io/LvtPortfolio](https://zpidero.github.io/LvtPortfolio/). A failed CI run never deploys.
+
+To publish manually: `git push origin main:gh-pages`
 
 ---
 
