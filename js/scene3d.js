@@ -372,10 +372,6 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       }
       const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 2.4, 6), gold); spire.position.y = y + 1.1; temple.add(spire);
       for (let k = 0; k < 6; k++) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.2 - k * 0.018, 0.04, 6, 14).rotateX(Math.PI / 2), gold); ring.position.y = y + 0.4 + k * 0.28; temple.add(ring); }
-      // main hall beside it
-      const hall = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.5, 2.2), new THREE.MeshLambertMaterial({ color: '#5a2420', emissive: '#ffffff', emissiveMap: winTex, emissiveIntensity: 0.7 }));
-      hall.position.set(4, 0.75, 1); temple.add(hall);
-      const hallRoof = new THREE.Mesh(new THREE.ConeGeometry(2.8, 1.3, 4).rotateY(Math.PI / 4), dark); hallRoof.scale.set(1.15, 1, 0.75); hallRoof.position.set(4, 2.05, 1); temple.add(hallRoof);
       temple.position.set(px, py, pz); temple.scale.setScalar(1.15);
       scene.add(temple);
     }
