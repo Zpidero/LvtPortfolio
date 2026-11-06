@@ -1,36 +1,60 @@
 {
   "photos": [
     {
-      "src": "placeholder-01.svg",
-      "caption": "Dusk — placeholder, replace with your photo"
+      "src": "photo-2026-11-06.jpg",
+      "caption": "Hackathon crew — Nov 2026"
     },
     {
-      "src": "placeholder-02.svg",
-      "caption": "Tide — placeholder, replace with your photo"
+      "src": "photo-2026-11-05.jpg",
+      "caption": "Taking the call — Nov 2026"
     },
     {
-      "src": "placeholder-03.svg",
-      "caption": "Sakura — placeholder, replace with your photo"
+      "src": "photo-2026-10-28.jpg",
+      "caption": "Late-night coding with friends — Oct 2026"
     },
     {
-      "src": "placeholder-04.svg",
-      "caption": "Night — placeholder, replace with your photo"
+      "src": "photo-2026-04-25.jpg",
+      "caption": "Event day with friends — Apr 2026"
     },
     {
-      "src": "placeholder-05.svg",
-      "caption": "Lantern — placeholder, replace with your photo"
+      "src": "photo-2025-12-08.jpg",
+      "caption": "Ski day — Dec 2025"
     },
     {
-      "src": "placeholder-06.svg",
-      "caption": "Forest — placeholder, replace with your photo"
+      "src": "photo-2025-11-21.jpg",
+      "caption": "Night out — Nov 2025"
     },
     {
-      "src": "placeholder-07.svg",
-      "caption": "Temple — placeholder, replace with your photo"
+      "src": "photo-2025-10-04.jpg",
+      "caption": "The pyramids of Giza — Oct 2025"
     },
     {
-      "src": "placeholder-08.svg",
-      "caption": "Peak — placeholder, replace with your photo"
+      "src": "photo-2025-07-17.jpg",
+      "caption": "On the road — Jul 2025"
+    },
+    {
+      "src": "photo-2025-07-14.jpg",
+      "caption": "Palace gardens — Jul 2025"
+    },
+    {
+      "src": "photo-2024-12-01.jpg",
+      "caption": "Deep in a build — Dec 2024"
+    },
+    {
+      "src": "photo-2024-11-23.jpg",
+      "caption": "Hackathon break — Nov 2024"
+    },
+    {
+      "src": "photo-2024-05-19.jpg",
+      "caption": "Caixa Enginyers awards — May 2024"
+    },
+    {
+      "src": "photo-2024-04-01.jpg",
+      "caption": "Tournament podium — Apr 2024"
+    },
+    {
+      "src": "photo-2023-03-01.jpg",
+      "caption": "Holding up Pisa — Mar 2023"
     }
   ]
 }

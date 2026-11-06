@@ -843,11 +843,22 @@
     state.page = to;
   }
 
+  // Dynamic imports can be cancelled mid-load by the browser (flaky network / CDN, page busy loading).
+  // A failed import is cached for that URL, so each retry uses a fresh query string.
+  async function importRetry(path) {
+    const delays = [0, 600, 1500, 3500];
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await sleep(delays[i]);
+      try { return await import(i ? `${path}?retry=${i}` : path); }
+      catch (e) { if (i === delays.length - 1) throw e; }
+    }
+  }
+
   /* ---------- Snow Run (ski mini-game) ---------- */
   let skiGame = null, skiLoading = null;
   function ensureSki() {
     if (skiGame) return Promise.resolve(skiGame);
-    if (!skiLoading) skiLoading = import('./skigame.js')
+    if (!skiLoading) skiLoading = importRetry('./skigame.js')
       .then(mod => { skiGame = mod.createSkiGame({ container: $('#page-ski'), reduceMotion }); return skiGame; })
       .catch(e => { console.warn('Ski game unavailable:', e); skiLoading = null; });
     return skiLoading;
@@ -857,7 +868,7 @@
   let gallery3d = null, gallery3dLoading = null;
   function ensureGallery3D() {
     if (gallery3d || gallery3dLoading || !lake3d || !photos.length) return gallery3dLoading;
-    gallery3dLoading = import('./gallery3d.js').then(mod => {
+    gallery3dLoading = importRetry('./gallery3d.js').then(mod => {
       gallery3d = mod.createGallery3D({
         container: $('#page-gallery'), photos, reduceMotion,
         onOpen: (i, rect) => openLightbox(i, rect),
@@ -865,7 +876,7 @@
       });
       $('#page-gallery').classList.add('g3d');
       if (body.dataset.page === 'gallery' && !body.classList.contains('in-transit')) gallery3d.start();
-    }).catch(e => { console.warn('3D gallery unavailable, keeping the grid:', e); });
+    }).catch(e => { console.warn('3D gallery unavailable, keeping the grid:', e); gallery3dLoading = null; });
     return gallery3dLoading;
   }
   const photoGrid = $('#photoGrid');
@@ -1162,8 +1173,7 @@
     try {
       let mod;
       performance.mark('3d-import-start');
-      try { mod = await import('./scene3d.js'); }
-      catch (e) { await sleep(800); mod = await import('./scene3d.js?retry=1'); }   // flaky CDN: one retry
+      mod = await importRetry('./scene3d.js');
       performance.mark('3d-import-end');
       lake3d = mod.createLake3D({
         container: $('#stage'), reduceMotion, initialPage: state.page || pageFromHash(),
@@ -1182,7 +1192,91 @@
     }
   }
 
+  /* ---------- Titles: the cursor is a blade ----------
+     Every letter the cursor passes through is cut along the exact line the cursor travelled:
+     the two halves slide apart along the cut, hold for a moment, then join back together. */
+  const lastPtr = { x: 0, y: 0, t: 0 };
+  addEventListener('pointermove', e => { lastPtr.px = lastPtr.x; lastPtr.py = lastPtr.y; lastPtr.x = e.clientX; lastPtr.y = e.clientY; lastPtr.t = performance.now(); }, { passive: true });
+
+  function splitLetters(host) {
+    const walk = node => {
+      [...node.childNodes].forEach(ch => {
+        if (ch.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          for (const part of ch.textContent.split(/(\s+)/)) {
+            if (!part) continue;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); continue; }
+            const word = document.createElement('span');
+            word.className = 'word';
+            for (const c of part) {
+              const l = document.createElement('span');
+              l.className = 'ch';
+              l.innerHTML = `<span class="ch-base">${c}</span><span class="ch-half ch-a">${c}</span><span class="ch-half ch-b">${c}</span><span class="ch-blade"></span>`;
+              word.appendChild(l);
+            }
+            frag.appendChild(word);
+          }
+          ch.replaceWith(frag);
+        } else if (ch.nodeType === 1) walk(ch);
+      });
+    };
+    walk(host);
+  }
+
+  function cutLetter(l, x, y, dx, dy) {
+    if (l.dataset.cut) return;
+    l.dataset.cut = '1';
+    const r = l.getBoundingClientRect();
+    const px = x - r.left, py = y - r.top;                    // where the blade crossed, in the letter's box
+    let len = Math.hypot(dx, dy);
+    if (len < 0.5) { dx = 1; dy = -0.35; len = Math.hypot(dx, dy); }
+    dx /= len; dy /= len;                                     // direction of the cut
+    const nx = -dy, ny = dx, L = 400;                         // normal (which side is "up")
+    const P = (k1, k2) => `${(px + dx * k1 + nx * k2).toFixed(1)}px ${(py + dy * k1 + ny * k2).toFixed(1)}px`;
+    const a = l.querySelector('.ch-a'), b = l.querySelector('.ch-b'), blade = l.querySelector('.ch-blade');
+    a.style.clipPath = `polygon(${P(-L, 0)}, ${P(L, 0)}, ${P(L, L)}, ${P(-L, L)})`;
+    b.style.clipPath = `polygon(${P(-L, 0)}, ${P(L, 0)}, ${P(L, -L)}, ${P(-L, -L)})`;
+    const fs = parseFloat(getComputedStyle(l).fontSize) || 40;
+    const gap = fs * 0.1, slide = fs * 0.07;                 // halves push apart and slip along the cut
+    const move = (sg) => `translate(${(nx * gap * sg + dx * slide * sg).toFixed(1)}px, ${(ny * gap * sg + dy * slide * sg).toFixed(1)}px) rotate(${(sg * 2.5).toFixed(1)}deg)`;
+    l.classList.add('cut');
+    const opts = { duration: 1250, easing: 'cubic-bezier(.2,.9,.25,1)' };
+    const kf = sg => [
+      { transform: 'none' },
+      { transform: move(sg), offset: 0.14 },
+      { transform: move(sg * 1.08), offset: 0.62 },
+      { transform: 'none' }
+    ];
+    a.animate(kf(1), opts);
+    const anim = b.animate(kf(-1), opts);
+    // the blade streak, drawn along the cut through the letter
+    blade.style.left = px + 'px'; blade.style.top = py + 'px';
+    blade.style.transform = `translate(-50%, -50%) rotate(${Math.atan2(dy, dx)}rad)`;
+    blade.animate([
+      { opacity: 1, width: '0px' }, { opacity: 1, width: (fs * 1.6) + 'px', offset: 0.12 }, { opacity: 0, width: (fs * 1.6) + 'px', offset: 0.3 },
+      { opacity: 0, offset: 0.86 }, { opacity: 0.6, offset: 0.92 }, { opacity: 0 }
+    ], { duration: 1250, easing: 'ease-out' });
+    anim.finished.then(() => { l.classList.remove('cut'); delete l.dataset.cut; a.style.clipPath = b.style.clipPath = ''; });
+  }
+
+  function bladeTitles() {
+    $$('.name, .section-title, .scroll-content h2').forEach(host => {
+      if (!host.getAttribute('aria-label')) host.setAttribute('aria-label', host.textContent.replace(/\s+/g, ' ').trim());
+      [...host.childNodes].forEach(n => { if (n.nodeType === 1) n.setAttribute('aria-hidden', 'true'); });
+      splitLetters(host);
+      host.classList.add('bladeable');
+      if (reduceMotion) return;
+      host.addEventListener('pointermove', e => {
+        const l = e.target.closest('.ch');
+        if (!l || !host.contains(l)) return;
+        const dx = e.clientX - (lastPtr.px ?? e.clientX), dy = e.clientY - (lastPtr.py ?? e.clientY);
+        cutLetter(l, e.clientX, e.clientY, dx, dy);
+      });
+    });
+  }
+
   function init() {
+    bladeTitles();
     makeStars();
     performance.mark('layout-start');
     const texReady = layoutAll();

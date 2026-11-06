@@ -12,9 +12,9 @@ A Japanese-inspired portfolio built as **one continuous 3D world** (Three.js). A
 
 | Page | Place | How you get there |
 |------|-------|-------------------|
-| Home (湖) | A lake at dusk: stilt house, torii, sakura trees, floating lanterns, falling petals | — |
+| Home (湖) | A lake at dusk: stilt house, sakura islands, floating lanterns, falling petals | — |
 | Projects (作品) | Underwater: seabed, seaweed, koi, light shafts | Dive through the surface (scroll ↓) |
-| About (私) | The night sky: moon, stars, clouds, cranes | Rise through the clouds (scroll ↑, or click the torii) |
+| About (私) | The night sky: moon, stars, clouds, cranes | Rise through the clouds (scroll ↑) |
 | Contact (連絡) | Inside the house, with a kneeling samurai | Shoji doors slide open (or click the house) |
 | Hidden gallery (侍の目) | A 3D world of floating photos, watched by a giant eye | Click the samurai → fly into his eye |
 | Snow Run (雪の道) | A ski mini-game on the volcano | Click the mountain |
