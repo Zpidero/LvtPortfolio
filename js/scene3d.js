@@ -1740,6 +1740,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     const hits = raycaster.intersectObjects(pickables, true);
     for (const h of hits) {
       if (h.point.y < 0) continue;
+      if (h.object.isPoints || h.object.isSprite) continue;   // dust, steam, glows: not clickable things
       let o = h.object;
       while (o && o !== samurai && o !== house && o !== torii && o !== volcano && o !== duelGroup) o = o.parent;
       return o === samurai ? 'samurai' : o === house ? 'house' : o === torii ? 'torii' : o === volcano ? 'mountain' : o === duelGroup ? 'duel' : null;

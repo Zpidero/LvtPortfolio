@@ -117,7 +117,7 @@ export function createGallery3D({ container, photos, reduceMotion = false, onOpe
 
   const cards = [];
   const n = photos.length;
-  const COUNT = n ? Math.min(36, Math.max(n, 18)) : 0;
+  const COUNT = Math.min(36, n);                       // one card per photo, no repeats
   const r = mulberry(21);
   // layered, jittered rings so nothing overlaps head-on
   for (let i = 0; i < COUNT; i++) {
