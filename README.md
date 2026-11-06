@@ -2,7 +2,7 @@
 
 > Portfolio website for **Lluc Vivet Torras** — Computer Engineering Student at Universitat de Lleida.
 
-Live at: `https://lvtportfolio.onrender.com/`
+Live at: https://zpidero.github.io/LvtPortfolio/ (GitHub Pages, from the `gh-pages` branch)
 
 ---
 
@@ -21,6 +21,7 @@ A Japanese-inspired portfolio built as **one continuous 3D world** (Three.js). A
 
 - The lake ripples under the cursor (simulation on the CPU, uploaded as a texture); clicking floats a lantern and makes a koi leap
 - The samurai's head and eyes follow the cursor; he blinks
+- Two samurai duel on the lake: they circle, lunge, clash in a burst of sparks and spring apart (click them to force a clash)
 - Sumi-ink brush cursor (fading stroke, ensō over links, ink splatter on click)
 - Hash routing (`#projects`, `#about`, `#contact`, `#gallery`, `#ski`): back button and deep links work
 - Scroll / swipe / arrow keys move between places, `Esc` goes back to the lake

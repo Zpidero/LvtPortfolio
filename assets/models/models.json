@@ -29,6 +29,21 @@
       "created": "2026-11-06 00:11",
       "size_kb": 144.0,
       "compression": "meshopt"
+    },
+    {
+      "name": "samurai_fighter",
+      "file": "samurai_fighter.glb",
+      "url": "assets/models/samurai_fighter.glb",
+      "description": "A Japanese samurai standing in a combat stance, full body, side-on, legs wide apart and knees bent, both hands gripping a long katana raised above his head ready to strike. Black lacquered armor laced with red cords, black shoulder guards, dark indigo hakama trousers, kabuto helmet with a golden crescent crest, dark red face mask. Dynamic, solid silhouette, stylized 3D game asset.",
+      "kind": "object",
+      "style": "stylized",
+      "textured": false,
+      "rigged": false,
+      "animations": 0,
+      "job_id": "20261106-132950-993292",
+      "created": "2026-11-06 13:30",
+      "size_kb": 109.0,
+      "compression": "meshopt"
     }
   ]
 }

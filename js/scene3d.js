@@ -73,7 +73,8 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   const camera = new THREE.PerspectiveCamera(45, W / H, 0.05, 900);
   const SUN_DIR  = new V3(0.36, 0.085, -1).normalize();
-  let volcano = null, skiNight = 1, furin = null, updateRoom = null;
+  let volcano = null, skiNight = 1, furin = null, updateRoom = null, duel = null;
+  const duelGroup = new THREE.Group();
   const MOON_DIR = new V3(0.04, 0.55, -1).normalize();
 
   /* =========================================================
@@ -1734,14 +1735,18 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
 
   // hovering the house / torii (they're clickable)
   let hovered = null;
-  const pickables = [house, volcano];
+  // on the right island, on the open ground in front of its sakura trees
+  { const dx = 13.0, dz = -11.8; duelGroup.position.set(dx, Math.max(0, islandHeight(dx, dz)) - 0.03, dz); }
+  duelGroup.scale.setScalar(0.5);
+  scene.add(duelGroup);
+  const pickables = [house, volcano, duelGroup];
   function pick() {
     const hits = raycaster.intersectObjects(pickables, true);
     for (const h of hits) {
       if (h.point.y < 0) continue;
       let o = h.object;
-      while (o && o !== samurai && o !== house && o !== torii && o !== volcano) o = o.parent;
-      return o === samurai ? 'samurai' : o === house ? 'house' : o === torii ? 'torii' : o === volcano ? 'mountain' : null;
+      while (o && o !== samurai && o !== house && o !== torii && o !== volcano && o !== duelGroup) o = o.parent;
+      return o === samurai ? 'samurai' : o === house ? 'house' : o === torii ? 'torii' : o === volcano ? 'mountain' : o === duelGroup ? 'duel' : null;
     }
     return null;
   }
@@ -2079,6 +2084,7 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         const h = waterHit(x, y);
         const what = pick();
         if (what === 'house' || what === 'samurai') { onNavigate('contact'); return; }
+        if (what === 'duel') { if (duel) duel.clashNow(); return; }
         if (what === 'mountain') { onNavigate('ski'); return; }
         if (h && h.distanceTo(camera.position) < 60) {
           queueDrop(h.x, h.z, 0.03, 1.4);
@@ -2126,7 +2132,8 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       rippleU.time.value = t;
 
       if (petals.visible) updatePetals(dt, t);
-      if (cy > -0.05 && cy < 30) { updateLanterns(dt, t); updateLeap(dt); scenery.update(dt, t); }
+      if (cy > -0.05 && cy < 30) { updateLanterns(dt, t); updateLeap(dt); scenery.update(dt, t); if (duel) duel.update(dt, t); }
+      duelGroup.visible = cy > -0.05;
       const glowOn = page === 'home' && !travel && hoverPoint && !hovered;
       if (hoverPoint) cursorGlow.position.set(hoverPoint.x, 0.03, hoverPoint.z);
       cursorGlowMat.opacity = lerp(cursorGlowMat.opacity, glowOn ? 1 : 0, 1 - Math.exp(-dt * 8));
@@ -2174,6 +2181,12 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       const r = Math.hypot(nx, nz);
       if (h < 0.4 && r < 0.3) return 'bark';                         // trunk + root flares
       return (Math.sin(nx * 23.0 + h * 17.0) * Math.cos(nz * 19.0 - h * 11.0) > 0.25) ? 'blossomDeep' : 'blossom';
+    },
+    fighter(nx, h, nz) {
+      if (h > 0.9) return 'gold';
+      if (h < 0.06) return 'saya';
+      if (h < 0.45) return 'indigo';
+      return 'lacquer';
     },
     samurai(nx, h, nz) {
       const ax = Math.abs(nx);
@@ -2251,7 +2264,9 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
         for (let i = 0; i < p.count; i++) {
           v.fromBufferAttribute(p, i).applyMatrix4(m);
           const fx = (v.x - box.min.x) / size.x, fy = (box.max.y - v.y) / size.y;
-          uv[i * 2] = bx0 + fx * (bx1 - bx0);
+          uv[i * 2] = proj.fit === 'height'
+            ? (bx0 + bx1) / 2 + (v.x - (box.min.x + box.max.x) / 2) / size.y * (by1 - by0)
+            : bx0 + fx * (bx1 - bx0);
           uv[i * 2 + 1] = 1 - (by0 + fy * (by1 - by0));
           const nz = nrm ? n.fromBufferAttribute(nrm, i).applyMatrix3(nm).normalize().z : 1;
           back[i] = smooth(0.2, -0.3, nz);
@@ -2354,6 +2369,87 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
     return eyes;
   }
 
+  /* ---------- two samurai duelling on the lake ----------
+     One generated model, mirrored for the opponent. They circle, lunge, their blades clash
+     in a burst of sparks, they push, spring apart and reset. Each step ripples the water;
+     clicking them starts a clash right away. */
+  function buildDuel(obj, cfg) {
+    obj.traverse(o => { if (o.isMesh) o.material.side = THREE.DoubleSide; });
+    const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new V3());
+    const k = (cfg.height ?? 1.75) / size.y;
+    obj.scale.setScalar(k);
+    obj.position.set(-(box.min.x + box.max.x) / 2 * k, -box.min.y * k, -(box.min.z + box.max.z) / 2 * k);
+    const A = new THREE.Group(), B = new THREE.Group();
+    A.add(obj); B.add(obj.clone(true));
+    B.scale.x = -1;                                     // mirror: his sword points the other way
+    duelGroup.add(A, B);
+
+    // sparks + flash where the blades meet
+    const SN = 60, sPos = new Float32Array(SN * 3), sVel = new Float32Array(SN * 3), sLife = new Float32Array(SN);
+    const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    const sparks = new THREE.Points(sGeo, new THREE.PointsMaterial({
+      map: radialTex([[0, 'rgba(255,240,200,1)'], [0.4, 'rgba(255,170,60,.7)'], [1, 'rgba(255,120,30,0)']]),
+      size: 0.24, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    }));
+    const flash = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: radialTex([[0, 'rgba(255,250,230,1)'], [0.3, 'rgba(255,200,120,.5)'], [1, 'rgba(255,160,80,0)']]),
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0
+    }));
+    const CLASH = new V3(0, cfg.clashY ?? 1.3, 0);
+    flash.position.copy(CLASH);
+    duelGroup.add(sparks, flash);
+    for (let i = 0; i < SN; i++) sPos[i * 3 + 1] = -99;
+
+    const T = 5.2;                       // seconds per exchange
+    let offset = 0, lastP = 0, flashK = 0;
+    const ease = x => x * x * (3 - 2 * x);
+    const stepRipple = grp => {
+      const w = grp.localToWorld(new V3(0, 0, 0));
+      if (islandHeight(w.x, w.z) <= 0) queueDrop(w.x, w.z, 0.01, 0.22);    // only when standing on water
+    };
+    duel = {
+      clashNow() { const p = (performanceTime() + offset) % T; offset += (1.55 - p + T) % T; },
+      update(dt, t) {
+        const p = (t + offset) % T;
+        let gap = 1.0, lean = 0, bob = Math.sin(t * 2.2) * 0.02;
+        if (p < 1.5) { gap = 1.0 + Math.sin(p * 2.1) * 0.06; lean = Math.sin(p * 2.1) * 0.03; }                 // stand-off
+        else if (p < 1.9) { const k2 = ease((p - 1.5) / 0.4); gap = lerp(1.0, 0.5, k2); lean = 0.22 * k2; }       // lunge
+        else if (p < 2.5) { gap = 0.5 + Math.sin((p - 1.9) * 40) * 0.012; lean = 0.22; }                            // blades locked
+        else if (p < 3.0) { const k2 = ease((p - 2.5) / 0.5); gap = lerp(0.5, 1.2, k2); lean = lerp(0.22, -0.12, k2); bob += Math.sin(k2 * Math.PI) * 0.18; } // spring apart
+        else { const k2 = ease(Math.min(1, (p - 3.0) / 1.2)); gap = lerp(1.2, 1.0, k2); lean = lerp(-0.12, 0, k2); }  // reset
+        A.position.set(gap, Math.max(0, bob), 0); A.rotation.z = lean;
+        B.position.set(-gap, Math.max(0, bob), 0); B.rotation.z = -lean;
+        duelGroup.rotation.y = -0.2 + Math.sin(t * 0.12) * 0.25;                                                   // they slowly circle
+
+        // events
+        const crossed = x => lastP < x && p >= x;
+        if (crossed(1.9) || (lastP > p && p >= 1.9)) {                                                              // clash!
+          flashK = 1;
+          for (let i = 0; i < SN; i++) {
+            sPos[i * 3] = CLASH.x; sPos[i * 3 + 1] = CLASH.y; sPos[i * 3 + 2] = CLASH.z;
+            const a = Math.random() * Math.PI * 2, e = Math.random() * 0.9 - 0.2, sp = 1.5 + Math.random() * 3.5;
+            sVel[i * 3] = Math.cos(a) * Math.cos(e) * sp; sVel[i * 3 + 1] = Math.sin(e) * sp + 1.2; sVel[i * 3 + 2] = Math.sin(a) * Math.cos(e) * sp;
+            sLife[i] = 0.4 + Math.random() * 0.5;
+          }
+          const w = duelGroup.localToWorld(new V3(0, 0, 0)); if (islandHeight(w.x, w.z) <= 0) queueDrop(w.x, w.z, 0.022, 0.45);
+        }
+        if (crossed(1.5) || crossed(2.5) || crossed(3.0)) { stepRipple(A); stepRipple(B); }
+        lastP = p;
+
+        flashK = Math.max(0, flashK - dt * 4);
+        flash.material.opacity = flashK; flash.scale.setScalar(1.0 + (1 - flashK) * 2.4);
+        for (let i = 0; i < SN; i++) {
+          if (sLife[i] <= 0) { sPos[i * 3 + 1] = -99; continue; }
+          sLife[i] -= dt; sVel[i * 3 + 1] -= 6 * dt;
+          sPos[i * 3] += sVel[i * 3] * dt; sPos[i * 3 + 1] += sVel[i * 3 + 1] * dt; sPos[i * 3 + 2] += sVel[i * 3 + 2] * dt;
+          if (sPos[i * 3 + 1] < 0.02) { sLife[i] = 0; }
+        }
+        sGeo.attributes.position.needsUpdate = true;
+      }
+    };
+  }
+  const performanceTime = () => performance.now() / 1000;
+
   const slots = { samurai: { parent: samurai, fallback: samuraiProc, height: 0.62 } };
   function placeTrees(gltfScene, cfg) {
     const box = new THREE.Box3().setFromObject(gltfScene), size = box.getSize(new V3());
@@ -2404,6 +2500,15 @@ export function createLake3D({ container, reduceMotion = false, initialPage = 'h
       }
     };
     for (const [name, cfg] of Object.entries(list || {})) {
+      if (name === 'duel' && cfg && cfg.file) {
+        loader.load('assets/models/' + cfg.file, g => {
+          const obj = g.scene;
+          const frame = paintModel(obj, PAINTERS[cfg.paint || 'fighter']);
+          const go = () => buildDuel(obj, cfg);
+          if (cfg.projection) projectTexture(obj, frame, cfg.projection, go, false); else go();
+        }, undefined, err => console.warn('Duel model failed:', err));
+        continue;
+      }
       if (name === 'sakura' && cfg && cfg.file) {
         loader.load('assets/models/' + cfg.file, g => {
           const obj = g.scene;

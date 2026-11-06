@@ -26,5 +26,20 @@
         0.9043
       ]
     }
+  },
+  "duel": {
+    "file": "samurai_fighter.glb",
+    "height": 2.0,
+    "paint": "fighter",
+    "projection": {
+      "image": "samurai_fighter-albedo.webp",
+      "bbox": [
+        0.1123,
+        0.0508,
+        0.8672,
+        0.9385
+      ]
+    },
+    "clashY": 1.5
   }
 }
